@@ -2,8 +2,13 @@ const CTRL_MIDDLE = {
 	action: "return",
 	turnData: "ft0",
 	name: "goalie_middle",
-	execute(input, controllers){
+	execute(input, controllers, fuzzySystem){
 		const next = controllers.slice(1)[0];
+
+		if (!input.state.ball) {
+            return this.searchBall(input);
+        }
+
 		switch (input.action){ 
 			case "return":
 				input.cmd = this.actionReturn(input);
@@ -17,7 +22,8 @@ const CTRL_MIDDLE = {
 		}
 		//input.action = this.action;
 		if (next){
-			const command = next.execute(input, controllers.slice(1));
+			//console.log("FUZZY middle", fuzzySystem, next)
+			const command = next.execute(input, controllers.slice(1), fuzzySystem);
 			if (command) return command;
 			if (input.newAction) input.action = input.newAction;
 			return input.cmd;
@@ -39,8 +45,7 @@ const CTRL_MIDDLE = {
 	},
 	seekBall(input){
 		if (input.side != 'l' && input.team == "A"){
-			throw "Error";
-			console.log(input.turnData);				
+			throw "Error";			
 		}
 
 		if (input.state.all_flags[input.turnData]){
@@ -61,7 +66,11 @@ const CTRL_MIDDLE = {
 			return {n: "turn", v: (input.side == "l") ? 20 : -20};
 		}
 		//throw "Error"
-	}
+	},
+
+	searchBall(input) {
+        return { n: "turn", v: 60 }; // Поворот на 60 градусов
+    }
 }
 
 

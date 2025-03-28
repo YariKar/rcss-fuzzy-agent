@@ -7,6 +7,7 @@ const VERSION = 7;
 const goalie_low = require("./ctrl_low");
 const goalie_middle = require("./ctrl_middle");
 const goalie_high = require("./ctrl_high");
+const FuzzyController = require('./fuzzy-controller');
 
 function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x, start_y){
     let agent = new Agent(team, goalkeeper);
@@ -16,6 +17,7 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
     agent.controllers = controllers;
     agent.start_x = start_x;
     agent.start_y = start_y;
+    agent.fuzzySystem = new FuzzyController(agent)
     return agent;
 }
 
@@ -66,24 +68,21 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
     
 
     
-    let goalkeeper_A = new Agent("A", true);
-    goalkeeper_A.start_x = -50;
-    goalkeeper_A.start_y = 0;
-    let goalkeeper_B = new Agent("B", true);
-    goalkeeper_B.start_x = -50;
-    goalkeeper_B.start_y = 0;
-
-    goalkeeper_A.taken.action = "return";
-    goalkeeper_A.taken.turnData = "ft0";
-    goalkeeper_A.taken.wait = 0;
-
-    goalkeeper_B.taken.action = "return";
-    goalkeeper_B.taken.turnData = "ft0";
-    goalkeeper_B.taken.wait = 0;
-
-
-    goalkeeper_A.controllers = [goalie_low, goalie_middle, goalie_high];
-    goalkeeper_B.controllers = [goalie_low, goalie_middle, goalie_high];
+    const createGoalie = (team) => {
+        const goalie = createAgent(
+            team,
+            true,
+            [goalie_low, goalie_middle, goalie_high], // Контроллеры
+            -50, 0, 0, // Позиция
+            -50, 0
+        );
+        goalie.taken.action = "return";
+        goalie.taken.turnData = "ft0";
+        return goalie;
+    };
+    
+    let goalkeeper_A = createGoalie("A");
+    let goalkeeper_B = createGoalie("B");
 
     await Socket(goalkeeper_A, "A", VERSION, true);
     await goalkeeper_A.socketSend('move', `${goalkeeper_A.start_x} ${goalkeeper_A.start_y}`);

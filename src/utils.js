@@ -143,7 +143,7 @@ module.exports = {
             if (!can){
                 continue;
             }
-            console.log(taken.state.pos.x, player.x);
+            //console.log(taken.state.pos.x, player.x);
             return {n: "kick", v: 2 * player.dist + 10 + " " + player.angle};
         }
         return null;

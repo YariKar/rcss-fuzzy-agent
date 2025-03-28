@@ -46,7 +46,7 @@ class Manager{
 
 	static getFaceDir(obj_name, p){
 		let obj = utils.see_object(obj_name, p);
-		console.log("OBJECT: ", obj);
+		//console.log("OBJECT: ", obj);
 		return obj[4];
 	}
 }

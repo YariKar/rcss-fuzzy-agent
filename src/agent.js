@@ -3,7 +3,7 @@ const utils = require("./utils");
 const Flags = require('./flags');
 const TManager = require('./timeMacineManager');
 const Taken = require("./taken");
-
+const FuzzyController = require('./fuzzy-controller');
 
 class Agent {
     constructor(teamName, goalkeeper) {
@@ -37,6 +37,7 @@ class Agent {
         this.top = null;
         this.center = null;
         this.direction = null;
+        this.fuzzySystem = null
 
     }
 
@@ -299,7 +300,7 @@ class Agent {
 
     analyzeEnv(msg, cmd, p) {
         if (cmd == "hear"){
-            console.log(p);
+            //console.log(p);
             if (p[2].includes("kick") && p[2] != "before_kick_off"){
                 if (!p[2].includes(this.taken.side)){
                     this.run = false;
@@ -339,6 +340,13 @@ class Agent {
         }  
 
         if (cmd === "see"){
+            // const fuzzyDecision = this.fuzzySystem.evaluateEnvironment();
+            // //console.log("FUZZY", fuzzyDecision, this.position, this.teamName, this.goalie)
+            // if(fuzzyDecision && fuzzyDecision.immediate) {
+            //     this.act = fuzzyDecision.command;
+            //     return;
+            // }
+
             if (this.next_act){
                 this.act = this.next_act;
                 //console.log("ACT: ", this.act, p[0]);
@@ -350,8 +358,16 @@ class Agent {
             this.taken.state['time'] = p[0];
             this.taken.set(p);
 
-            if (this.controllers){
-                this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
+            if (this.controllers){ 
+                //console.log("AGENT", this.taken, this.goalie)
+                if (this.goalie){ //TODO
+                    //console.log("FUZZY agent", this.fuzzySystem)
+                    this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
+                    //console.log("FUZZY GOALIE", this.act)
+                } else{
+                    this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
+                }
+                
                 //console.log(this.act);
                 if (Array.isArray(this.act)){
                     this.next_act = this.act[1];
