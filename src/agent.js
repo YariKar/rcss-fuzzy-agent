@@ -314,10 +314,10 @@ class Agent {
                 }
             }
             if (p[2].includes("free_kick")) {
-                setTimeout(() => {
-                    const angle = this.fuzzySystem.calculateSafeDirection(this.state);
-                    this.socketSend("kick", `100 ${angle}`);
-                }, 300);
+                // setTimeout(() => {
+                //     const angle = this.fuzzySystem.calculateSafeDirection(this.state);
+                //     this.socketSend("kick", `100 ${angle}`);
+                // }, 500);
             }
             if (p[2].includes("goal") || p[2] === "before_kick_off"){
                 this.act = {n: "move", v: this.start_x + " " + this.start_y}
