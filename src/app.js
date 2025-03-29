@@ -9,15 +9,18 @@ const goalie_middle = require("./ctrl_middle");
 const goalie_high = require("./ctrl_high");
 const FuzzyController = require('./fuzzy-controller');
 
-function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x, start_y){
-    let agent = new Agent(team, goalkeeper);
+
+
+function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x, start_y, side='l'){
+
+    let agent = new Agent(team, goalkeeper, side);
     agent.bottom = bottom;
     agent.top = top;
     agent.center = center;
     agent.controllers = controllers;
     agent.start_x = start_x;
     agent.start_y = start_y;
-    agent.fuzzySystem = new FuzzyController(agent)
+    agent.fuzzySystem = new FuzzyController(agent.position)
     return agent;
 }
 
@@ -53,36 +56,38 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
         [0, 40, -10, -10, -20],
     ]
     let players = [];
-    
+    const side = 'l'
+    const anotherSide = 'r'
     
     for (const pl of A_team){
         players.push(createAgent("A", false, [low_ctrl, high_ctrl], 
-            pl[1], pl[0], pl[2], pl[3], pl[4]))
+            pl[1], pl[0], pl[2], pl[3], pl[4], side))
     }
     
     
     for (const pl of B_team){
         players.push(createAgent("B", false, [low_ctrl, high_ctrl], 
-            pl[1], pl[0], pl[2], pl[3], pl[4]))
+            pl[1], pl[0], pl[2], pl[3], pl[4], anotherSide))
     }
     
 
     
-    const createGoalie = (team) => {
+    const createGoalie = (team, side) => {
         const goalie = createAgent(
             team,
             true,
             [goalie_low, goalie_middle, goalie_high], // Контроллеры
             -50, 0, 0, // Позиция
-            -50, 0
+            -50, 0,
+            side
         );
         goalie.taken.action = "return";
         goalie.taken.turnData = "ft0";
         return goalie;
     };
     
-    let goalkeeper_A = createGoalie("A");
-    let goalkeeper_B = createGoalie("B");
+    let goalkeeper_A = createGoalie("A", side);
+    let goalkeeper_B = createGoalie("B", anotherSide);
 
     await Socket(goalkeeper_A, "A", VERSION, true);
     await goalkeeper_A.socketSend('move', `${goalkeeper_A.start_x} ${goalkeeper_A.start_y}`);

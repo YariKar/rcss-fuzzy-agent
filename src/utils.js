@@ -49,13 +49,13 @@ module.exports = {
         }
 
         destination = {'x': pos.x + sign * Math.sqrt(3) / 2 * dist, 'y': pos.y + sign * dist / 2};
-        can = canPass(pos, destination, taken.state.enemyTeam.concat(taken.state.players), 5);
+        can = this.canPass(pos, destination, taken.state.enemyTeam.concat(taken.state.players), 5);
         if (can){
             return {n: "kick", v: "25 -30"};
         }
 
         destination = {'x': pos.x + sign * Math.sqrt(3) / 2 * dist, 'y': pos.y + -sign * dist / 2};
-        can = canPass(pos, destination, taken.state.enemyTeam.concat(taken.state.players), 5);
+        can = this.canPass(pos, destination, taken.state.enemyTeam.concat(taken.state.players), 5);
         if (can){
             return {n: "kick", v: "25 30"};
         }

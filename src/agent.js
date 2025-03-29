@@ -6,8 +6,8 @@ const Taken = require("./taken");
 const FuzzyController = require('./fuzzy-controller');
 
 class Agent {
-    constructor(teamName, goalkeeper) {
-        this.position = 'l'; // По умолчанию - левая половина поля
+    constructor(teamName, goalkeeper, side='l') {
+        this.position = side; 
         this.run = true; // Игра начата
         this.act = null; // Действия
         this.rotationSpeed = null; // скорость вращения
@@ -32,6 +32,9 @@ class Agent {
         this.ta = null;
         this.controllers = null;
 
+        
+        this.start_x = null;
+        this.start_y = null
 
         this.bottom = null;
         this.top = null;
@@ -310,10 +313,17 @@ class Agent {
                     this.taken.kick = true;
                 }
             }
+            if (p[2].includes("free_kick")) {
+                setTimeout(() => {
+                    const angle = this.fuzzySystem.calculateSafeDirection(this.state);
+                    this.socketSend("kick", `100 ${angle}`);
+                }, 300);
+            }
             if (p[2].includes("goal") || p[2] === "before_kick_off"){
                 this.act = {n: "move", v: this.start_x + " " + this.start_y}
                 this.taken.action = "return";
                 this.taken.turnData = "ft0";
+                console.log("GOAL", this.start_x, this.start_y, this.position, this.goalie)
                 return;
                 //'move', `${player.start_x} ${player.start_y}`
             }
@@ -363,7 +373,7 @@ class Agent {
                 if (this.goalie){ //TODO
                     //console.log("FUZZY agent", this.fuzzySystem)
                     this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
-                    console.log("FUZZY GOALIE act", this.act)
+                    console.log("FUZZY GOALIE act", this.act, this.position)
                 } else{
                     this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
                 }
