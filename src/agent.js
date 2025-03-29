@@ -300,7 +300,7 @@ class Agent {
 
     analyzeEnv(msg, cmd, p) {
         if (cmd == "hear"){
-            //console.log(p);
+            //console.log("P", p);
             if (p[2].includes("kick") && p[2] != "before_kick_off"){
                 if (!p[2].includes(this.taken.side)){
                     this.run = false;
@@ -363,7 +363,7 @@ class Agent {
                 if (this.goalie){ //TODO
                     //console.log("FUZZY agent", this.fuzzySystem)
                     this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
-                    //console.log("FUZZY GOALIE", this.act)
+                    console.log("FUZZY GOALIE act", this.act)
                 } else{
                     this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
                 }

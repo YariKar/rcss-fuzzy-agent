@@ -1,187 +1,198 @@
-class FuzzyController {
-    constructor(agent) {
-        this.agent = agent;
+const utils = require("./utils");
+
+class FuzzyGoalie {
+    constructor() {
+        this.immediateCatch = this.immediateCatch.bind(this);
+        this.emergencyKick = this.emergencyKick.bind(this);
+        this.positioning = this.positioning.bind(this);
+        this.activeDefense = this.activeDefense.bind(this)
         this.rules = [
+            // Правило 1: Непосредственный перехват (0-3m)
             {
-                name: "critical_zone",
-                inputs: {
-                    distance: { mf: 'near', params: [0, 5] },
-                    speed: { mf: 'fast', params: [1.0, 3.0] },
-                    angle: { mf: 'direct', params: [-30, 30] }
+                conditions: {
+                    distance: x => this.triangular(x, 0, 3, 5),
+                    threat: x => x ? 1 : 0.2
                 },
-                output: { action: 'catch', priority: 1 }
+                action: this.immediateCatch,
+                weight: 2.0
             },
+            // Правило 2: Экстренный удар (2-10m + угроза)
             {
-                name: "intercept_zone",
-                inputs: {
-                    distance: { mf: 'medium', params: [5, 20] },
-                    speed: { mf: 'moving', params: [0.3, 1.5] },
-                    angle: { mf: 'wide', params: [-45, 45] }
+                conditions: {
+                    distance: x => this.triangular(x, 2, 5, 10),
+                    threat: x => x ? 1 : 0
                 },
-                output: { action: 'intercept', priority: 2 }
+                action: this.emergencyKick,
+                weight: 1.5
             },
+            // Правило 3: Активная защита (5-25m)
             {
-                name: "track_zone",
-                inputs: {
-                    distance: { mf: 'far', params: [15, 60] }, // >=15 метров
-                    speed: { mf: 'any', params: [] },
-                    angle: { mf: 'visible', params: [-90, 90] }
+                conditions: {
+                    distance: x => this.triangular(x, 5, 15, 25)
                 },
-                output: { action: 'track', priority: 3 }
+                action: this.activeDefense
+            },
+            // Правило 4: Базовое позиционирование
+            {
+                conditions: {
+                    distance: x => this.triangular(x, 20, 40, 60)
+                },
+                action: this.positioning
             }
         ];
     }
 
-    // Функции принадлежности
-    mf(x, type, params) {
-        switch(type) {
-            case 'near':
-                return Math.max(0, 1 - x/params[1]);
-            case 'far':
-                return x >= params[0] ? 1 : 0; // True, если расстояние >=15
-            case 'fast':
-                return x < params[0] ? 0 : Math.min(1, (x - params[0])/(params[1] - params[0]));
-            case 'direct':
-                return 1 - Math.min(1, Math.abs(x)/params[1]);
-            case 'visible':
-                return Math.abs(x) <= params[1] ? 1 : 0; // True, если угол в пределах [-90,90]
-            case 'any':
-                return 1;
-            default:
-                return 0;
+    evaluate(state) {
+        if (!state || !state.ball) {
+            return this.searchBall(state);
         }
-    }
 
-    evaluate(ball) {
-        const inputs = {
-            distance: ball.dist,
-            speed: this.calculateBallSpeed(),
-            angle: Math.abs(ball.angle)
-        };
-        console.log("EVALUATE", inputs)
-        return this.processRules(inputs);
-    }
+        const inputs = this.prepareInputs(state);
+        console.log("EVALUATE inputs", inputs);
 
-    defuzzify(activations) {
-        // Реализация дефаззификации (например, взвешенное среднее)
-        let total = 0;
-        let sum = 0;
-        
-        activations.forEach(a => {
-            const weight = a.strength;
-            total += weight * this.threatValue(a.threat);
-            sum += weight;
-        });
-        
-        return sum > 0 ? total/sum : 0;
-    }
-
-    threatValue(level) {
-        const values = {
-            critical: 0.9,
-            high: 0.7,
-            medium: 0.5,
-            low: 0.3
-        };
-        return values[level] || 0;
-    }
-
-    evaluateEnvironment() {
-        //console.log("FUZZY evaluateenv", this.agent.taken.state)
-        const state = this.agent.taken.state
-        if (!state || !state['ball']) return null;
-        
-        const inputs = {
-            distance: state['ball'].dist,
-            speed: this.calculateBallSpeed(),
-            angle: state['ball'].angle
-        };
-        
-        return this.processRules(inputs);
-    }
-
-    calculateBallSpeed() {
-        const current = this.agent.taken.state.ball;
-        const prev = this.agent.taken.state.ballPrev;
-        
-        // Если нет предыдущего состояния или текущего мяча
-        if (!prev || !current) return 0;
-        
-        // Получаем разницу во времени из общего времени агента
-        const currentTime = this.agent.taken.state.time;
-        const prevTime = this.agent.taken.state.ballPrev.time || currentTime - 1;
-        const dt = currentTime - prevTime;
-        
-        // Рассчитываем изменение координат
-        const dx = current.x - prev.x;
-        const dy = current.y - prev.y;
-        const distance = Math.sqrt(dx*dx + dy*dy);
-        
-        // Защита от нулевого/отрицательного времени и аномальных значений
-        return dt > 0 ? distance / dt : 0;
-    }
-    processRules(inputs) {
-        let maxPriority = -Infinity;
+        let maxActivation = 0;
         let bestAction = null;
-        
-        this.rules.forEach(rule => {
-            const activation = this.calculateActivation(rule.inputs, inputs);
-            console.log(`RULE ${rule.name}: activation=${activation.toFixed(2)}`);
-            if (activation > 0 && rule.output.priority > maxPriority) {
-                maxPriority = rule.output.priority;
-                bestAction = this.generateAction(rule.output.action, inputs);
+
+        for (const rule of this.rules) {
+            const activation = this.calculateActivation(rule, inputs);
+            console.log(`Rule ${rule.action.name} activation: ${activation}`);
+            
+            if (activation > maxActivation) {
+                maxActivation = activation;
+                bestAction = rule.action;
             }
-        });
-        
-        return bestAction;
-    }
-
-    calculateActivation(ruleInputs, currentInputs) {
-        let activation = 1;
-        
-        Object.entries(ruleInputs).forEach(([param, desc]) => {
-            const value = currentInputs[param];
-            activation = Math.min(activation, this.membership(value, desc));
-        });
-        
-        return activation;
-    }
-
-    membership(value, descriptor) {
-        const [mf, params] = [descriptor.mf, descriptor.params];
-        switch(mf) {
-            case 'near':
-                return Math.max(0, 1 - value/params[1]);
-            case 'far':
-                return Math.min(1, value/params[1]);
-            case 'fast':
-                return value < params[0] ? 0 : Math.min(1, (value - params[0])/(params[1] - params[0]));
-            case 'direct':
-                return 1 - Math.min(1, Math.abs(value)/params[1]);
-            case 'any':
-                return 1;
-            default:
-                return 0;
         }
+        
+        return bestAction ? bestAction(state) : this.defaultBehavior(state);
     }
 
-    generateAction(type, inputs) {
-        switch(type) {
-            case 'emergency_catch':
-                return {
-                    immediate: true,
-                    command: { n: "catch", v: inputs.angle }
-                };
-            case 'intercept':
-                const dashPower = Math.min(100, 80 + inputs.distance*5);
-                return {
-                    immediate: true,
-                    command: { n: "dash", v: dashPower }
-                };
-            case 'positioning':
-                return null; // Делегируем обычным контроллерам
+    prepareInputs(state) {
+        return {
+            distance: state.ball.dist || Infinity,
+            angle: Math.abs(state.ball.angle || 0),
+            threat: this.calculateThreatLevel(state)
+        };
+    }
+
+    // Новая треугольная функция принадлежности
+    triangular(x, a, b, c) {
+        if (x <= a) return 0;
+        if (x > a && x <= b) return (x - a)/(b - a);
+        if (x > b && x <= c) return (c - x)/(c - b);
+        return 0;
+    }
+
+    calculateThreatLevel(state) {
+        return this.nearOpponents(state) ? 1 : 0;
+    }
+
+    nearOpponents(state) {
+        return state.enemyTeam.some(p => 
+            p.dist < 5 && Math.abs(p.angle) < 45
+        );
+    }
+
+    activeDefense(state) {
+        const targetPos = this.calculateInterceptPosition(state);
+        const angle = Math.atan2(targetPos.y - state.pos?.y, 
+                               targetPos.x - state.pos?.x) * 180/Math.PI;
+        
+        return Math.abs(angle) > 15 
+            ? {n: "turn", v: angle}
+            : {n: "dash", v: 80};
+    }
+
+    calculateInterceptPosition(state) {
+        // Логика предсказания движения мяча
+        return {
+            x: state.ball.x + (state.ball.x - state.ballPrev?.x || 0),
+            y: state.ball.y + (state.ball.y - state.ballPrev?.y || 0)
+        };
+    }
+
+    calculateActivation(rule, inputs) {
+        const activations = Object.entries(rule.conditions).map(([param, fn]) => {
+            console.log("CALCULATEACT",inputs[param])
+            const value = inputs[param] || 0;
+            return fn(value);
+        });
+        return Math.min(...activations) * (rule.weight || 1);
+    }
+
+    // Реализация действий
+    immediateCatch(state) {
+        if (state.ball.dist < 0.5) {
+            console.log("IMMIDIATE catch", state.ball.angle)
+            return {n: "catch", v: state.ball.angle};
         }
+        console.log("IMMIDIATE dash", state.ball.dist)
+        return {n: "dash", v: 100};
+    }
+
+    emergencyKick(state) {
+        const kickAngle = this.calculateSafeDirection(state);
+        console.log("EMERGENCY", kickAngle)
+        return {n: "kick", v: `100 ${kickAngle}`};
+    }
+
+    passToTeammate(state) {
+        const teammate = this.findClosestTeammate(state);
+        return teammate 
+            ? {n: "kick", v: `80 ${teammate.angle}`}
+            : this.emergencyKick(state);
+    }
+
+    positioning(state) {
+        if (!state.pos) return {n: "move", v: "-50 0"};
+        
+        const targetPos = this.calculateOptimalPosition(state);
+        const angle = Math.atan2(targetPos.y - state.pos.y, 
+                               targetPos.x - state.pos.x) * 180/Math.PI;
+        console.log("POSITIONING", angle)
+        return Math.abs(angle) > 10 
+            ? {n: "turn", v: angle}
+            : {n: "dash", v: 60};
+    }
+
+    // Вспомогательные методы
+    calculateSafeDirection(state) {
+        // Выбираем направление в противоположную от ворот сторону
+        return state.rival_goal 
+            ? (state.rival_goal.angle + 180) % 360
+            : state.ball.angle + 180;
+    }
+
+    findClosestTeammate(state) {
+        return state.myTeam.reduce((closest, current) => 
+            current.dist < (closest.dist || Infinity) ? current : closest, 
+            null
+        );
+    }
+
+    nearOpponents(state) {
+        return state.enemyTeam.some(p => 
+            p.dist < 3 && Math.abs(p.angle) < 30
+        );
+    }
+
+    searchBall(state) {
+        return {n: "turn", v: 60};
+    }
+
+    defaultBehavior(state) {
+        return state.ball.dist < 20 
+            ? {n: "turn", v: state.ball.angle}
+            : {n: "move", v: "-50 0"};
+    }
+
+    calculateOptimalPosition(state) {
+        const baseX = -50;
+        const ballX = state.ball.x || baseX;
+        return {
+            x: baseX + Math.max(0, (ballX - baseX)) * 0.2,
+            y: (state.ball.y || 0) * 0.3
+        };
     }
 }
 
-module.exports = FuzzyController;
+module.exports = FuzzyGoalie;
