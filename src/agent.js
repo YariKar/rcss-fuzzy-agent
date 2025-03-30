@@ -334,6 +334,7 @@ class Agent {
         }
 
         if (cmd === "init"){
+            console.log("SET TAKEN SIDE",this.teamName, this.goalie, p[0])
             this.taken.side = p[0];           
         }
 

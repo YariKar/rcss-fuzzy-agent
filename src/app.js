@@ -9,7 +9,8 @@ const goalie_middle = require("./ctrl_middle");
 const goalie_high = require("./ctrl_high");
 const FuzzyController = require('./fuzzy-controller');
 
-
+const teamName = "Puck"
+const anotherTeamName = "B"
 
 function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x, start_y, side='l'){
 
@@ -60,13 +61,13 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
     const anotherSide = 'r'
     
     for (const pl of A_team){
-        players.push(createAgent("A", false, [low_ctrl, high_ctrl], 
+        players.push(createAgent(teamName, false, [low_ctrl, high_ctrl], 
             pl[1], pl[0], pl[2], pl[3], pl[4], side))
     }
     
     
     for (const pl of B_team){
-        players.push(createAgent("B", false, [low_ctrl, high_ctrl], 
+        players.push(createAgent(anotherTeamName, false, [low_ctrl, high_ctrl], 
             pl[1], pl[0], pl[2], pl[3], pl[4], anotherSide))
     }
     
@@ -86,13 +87,13 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
         return goalie;
     };
     
-    let goalkeeper_A = createGoalie("A", side);
-    let goalkeeper_B = createGoalie("B", anotherSide);
+    let goalkeeper_A = createGoalie(teamName, side);
+    let goalkeeper_B = createGoalie(anotherTeamName, anotherSide);
 
-    await Socket(goalkeeper_A, "A", VERSION, true);
+    await Socket(goalkeeper_A, teamName, VERSION, true);
     await goalkeeper_A.socketSend('move', `${goalkeeper_A.start_x} ${goalkeeper_A.start_y}`);
 
-    await Socket(goalkeeper_B, goalkeeper_B.teamName, VERSION, true);
+    await Socket(goalkeeper_B, anotherTeamName, VERSION, true);
     await goalkeeper_B.socketSend('move', `${goalkeeper_B.start_x} ${goalkeeper_B.start_y}`);
 
 

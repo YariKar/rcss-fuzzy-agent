@@ -2,7 +2,7 @@ const utils = require("./utils");
 
 const CTRL_LOW_PLAYER = {
     execute(taken, controllers, fuzzy) {
-        const action = fuzzy.evaluatePlayer(taken.state);
+        const action = fuzzy.evaluatePlayer(taken);
 		console.log("PLAYER LOW", action )
         return action || controllers[1].execute(taken, controllers, fuzzy);
     }

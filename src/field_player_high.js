@@ -1,6 +1,5 @@
 const CTRL_HIGH_PLAYER = {
-    execute(taken, controllers, bottom, top, direction, center) {
-        const fuzzy = controllers[0].fuzzy;
+    execute(taken, controllers, fuzzy) {
         const safeAngle = fuzzy.calculateSafeDirection(taken.state);
         console.log("PLAYER HIGH", safeAngle)
         if(taken.state?.ball?.dist < 2) {
