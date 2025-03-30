@@ -21,6 +21,8 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
     agent.controllers = controllers;
     agent.start_x = start_x;
     agent.start_y = start_y;
+    agent.taken.start_x = start_x
+    agent.taken.start_y = start_y
     agent.fuzzySystem = new FuzzyController()
     return agent;
 }
@@ -41,60 +43,59 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
         [0, 40, -10, -10, 20],
     ]
 
-    let B_team = [
-        [-40, -20, -35, -40, 30],
-        [-20, 0, -35, -40, 10],
-        [0, 20, -35, -40, -10],
-        [20, 40, 35, -40, -30],
+    // let B_team = [
+    //     [-40, -20, -35, -40, 30],
+    //     [-20, 0, -35, -40, 10],
+    //     [0, 20, -35, -40, -10],
+    //     [20, 40, 35, -40, -30],
 
-        [-40, -20, -25, -25, 30],
-        [-20, 0, -25, -25, 10],
-        [0, 20, -25, -25, -10],
-        [20, 40, -25, -25, -30],
+    //     [-40, -20, -25, -25, 30],
+    //     [-20, 0, -25, -25, 10],
+    //     [0, 20, -25, -25, -10],
+    //     [20, 40, -25, -25, -30],
 
 
-        [-40, 0, -10, -10, 20],
-        [0, 40, -10, -10, -20],
-    ]
+    //     [-40, 0, -10, -10, 20],
+    //     [0, 40, -10, -10, -20],
+    // ]
     let players = [];
-    const side = 'l'
-    const anotherSide = 'r'
+    // const side = 'l'
+    // const anotherSide = 'r'
     
     for (const pl of A_team){
         players.push(createAgent(teamName, false, [low_ctrl, high_ctrl], 
-            pl[1], pl[0], pl[2], pl[3], pl[4], side))
+            pl[1], pl[0], pl[2], pl[3], pl[4]))
     }
     
     
-    for (const pl of B_team){
-        players.push(createAgent(anotherTeamName, false, [low_ctrl, high_ctrl], 
-            pl[1], pl[0], pl[2], pl[3], pl[4], anotherSide))
-    }
+    // for (const pl of B_team){
+    //     players.push(createAgent(anotherTeamName, false, [low_ctrl, high_ctrl], 
+    //         pl[1], pl[0], pl[2], pl[3], pl[4]))
+    // }
     
 
     
-    const createGoalie = (team, side) => {
+    const createGoalie = (team) => {
         const goalie = createAgent(
             team,
             true,
             [goalie_low, goalie_middle, goalie_high], // Контроллеры
             -50, 0, 0, // Позиция
             -50, 0,
-            side
         );
         goalie.taken.action = "return";
         goalie.taken.turnData = "ft0";
         return goalie;
     };
     
-    let goalkeeper_A = createGoalie(teamName, side);
-    let goalkeeper_B = createGoalie(anotherTeamName, anotherSide);
+    let goalkeeper_A = createGoalie(teamName);
+    // let goalkeeper_B = createGoalie(anotherTeamName);
 
     await Socket(goalkeeper_A, teamName, VERSION, true);
     await goalkeeper_A.socketSend('move', `${goalkeeper_A.start_x} ${goalkeeper_A.start_y}`);
 
-    await Socket(goalkeeper_B, anotherTeamName, VERSION, true);
-    await goalkeeper_B.socketSend('move', `${goalkeeper_B.start_x} ${goalkeeper_B.start_y}`);
+    // await Socket(goalkeeper_B, anotherTeamName, VERSION, true);
+    // await goalkeeper_B.socketSend('move', `${goalkeeper_B.start_x} ${goalkeeper_B.start_y}`);
 
 
     for (const player of players){

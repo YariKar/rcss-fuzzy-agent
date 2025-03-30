@@ -1,16 +1,23 @@
 class FuzzyController {
     constructor() {
+        // Хранилище последних позиций
+        this.playerPositions = new Map();
+
+        // Конфигурация стартовых позиций
+        this.basePositions = new Map();
+        this.lastKnownBallPos = { x: 0, y: 0 };
+        this.gameState = 'neutral'; // neutral/attack/defense
         this.distanceMF = {
-            very_near: d => Math.max(0, 1 - d/5),
-            near: d => Math.max(0, 1 - Math.abs(d-7.5)/5),
-            medium: d => Math.max(0, 1 - Math.abs(d-15)/10),
-            far: d => Math.max(0, d/30)
+            very_near: d => Math.max(0, 1 - d / 5),
+            near: d => Math.max(0, 1 - Math.abs(d - 7.5) / 5),
+            medium: d => Math.max(0, 1 - Math.abs(d - 15) / 10),
+            far: d => Math.max(0, d / 30)
         };
 
         this.angleMF = {
-            perfect: a => Math.max(0, 1 - Math.abs(a)/15),
-            good: a => Math.max(0, 1 - Math.abs(a)/30),
-            acceptable: a => Math.max(0, 1 - Math.abs(a)/45)
+            perfect: a => Math.max(0, 1 - Math.abs(a) / 15),
+            good: a => Math.max(0, 1 - Math.abs(a) / 30),
+            acceptable: a => Math.max(0, 1 - Math.abs(a) / 45)
         };
         this.attackFlags = {
             l: ['fgrb', 'fgr', 'fgrt'],
@@ -20,7 +27,7 @@ class FuzzyController {
 
     evaluateGoalie(state) {
         if (!state?.ball) return { n: 'turn', v: 45 };
-        
+
         const ball = state.ball;
         const ballDist = ball.dist || 0;
         const ballAngle = ball.angle || 0;
@@ -28,7 +35,7 @@ class FuzzyController {
         const rules = [
             {
                 condition: () => ballDist < 3 && Math.abs(ballAngle) < 30,
-                action: () => ({ n: 'kick', v: `100 ${ballAngle}` })
+                action: () => ({ n: 'catch', v: `${ballAngle}` })
             },
             {
                 condition: () => ballDist < 10,
@@ -46,18 +53,29 @@ class FuzzyController {
     }
 
     evaluatePlayer(taken) {
-        const state = taken.state
-        if (!state?.ball || !state?.pos) return { n: 'turn', v: 45 };
+        const state = taken.state;
+        if (!state?.ball || !state?.pos) return null;
+        if (taken.state.pos) {
+            this.playerPositions.set(taken.playerNumber, {
+                x: taken.state.pos.x,
+                y: taken.state.pos.y,
+                timestamp: Date.now()
+            });
+        }
+        // Обновляем состояние игры
+        this._updateGameState(taken);
 
         const { ball, pos, myTeam = [] } = state;
         const ballDist = ball.dist || 0;
         const ballAngle = ball.angle || 0;
 
-        // Проверка является ли игрок ближайшим к мячу
         const isClosest = this._isClosestToBall(state);
-        
-        // Основные правила
+
         const rules = [
+            {
+                condition: () => this._shouldIntercept(state),
+                action: () => this._interceptBall(state)
+            },
             {
                 condition: () => isClosest && ballDist < 1,
                 action: () => this._shootOrPass(taken)
@@ -72,7 +90,7 @@ class FuzzyController {
             },
             {
                 condition: () => true,
-                action: () => this._strategicPositioning(state)
+                action: () => null // Передаем управление в HIGH-контроллер
             }
         ];
 
@@ -82,14 +100,65 @@ class FuzzyController {
                 if (action) return action;
             }
         }
+        return null; // Всегда возвращаем null вместо поворота
+    }
 
-        return { n: 'turn', v: 0 };
+    _updateGameState(taken) {
+        const ballX = this.lastKnownBallPos.x;
+        const threshold = taken.side === 'l' ? 0 : 0;
+        this.gameState = ballX * (taken.side === 'l' ? 1 : -1) > 30 ? 'attack' :
+            ballX * (taken.side === 'l' ? 1 : -1) < -20 ? 'defense' : 'neutral';
+    }
+
+    _shouldIntercept(state) {
+        if (!state.enemyTeam?.length || !state.ball) return false;
+        const ballDist = state.ball.dist;
+        const enemyThreshold = 3;
+
+        return state.enemyTeam.some(e => e.dist < enemyThreshold) &&
+            ballDist < 8;
+    }
+
+    _interceptBall(state) {
+        const ballAngle = state.ball.angle;
+        const ballDist = state.ball.dist;
+        return this._moveToBall(ballAngle, ballDist);
+    }
+
+    _improvedStrategicPositioning(state) {
+        if (!state.ball || !state.pos) return { n: 'turn', v: 45 };
+
+        // Позиция зависит от мяча с учетом своей половины поля
+        const ball = state.ball;
+        const baseX = state.side === 'l' ?
+            Math.min(40, ball.x * 0.7 + 10) :
+            Math.max(-40, ball.x * 0.7 - 10);
+
+        const targetPos = {
+            x: baseX,
+            y: ball.y * 0.7
+        };
+
+        const dx = targetPos.x - state.pos.x;
+        const dy = targetPos.y - state.pos.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const currentDir = state.direction || 0;
+        const angleDiff = angle - currentDir;
+
+        // Оптимизация поворота
+        if (Math.abs(angleDiff) > 150) {
+            return { n: 'turn', v: angleDiff > 0 ? angle - 360 : angle + 360 };
+        }
+
+        return Math.abs(angleDiff) > 15 ?
+            { n: 'turn', v: angle } :
+            { n: 'dash', v: 80 + Math.min(20, ball.dist / 2) };
     }
 
     _isClosestToBall(state) {
         if (!state.myTeam?.length) return true;
         const myDist = state.ball.dist;
-        return state.myTeam.every(teammate => 
+        return state.myTeam.every(teammate =>
             teammate.dist === undefined || teammate.dist >= myDist
         );
     }
@@ -104,18 +173,18 @@ class FuzzyController {
     _shootOrPass(taken) {
         const state = taken.state
         console.log("SHOOTORPASS", state.rival_goal, state.pos);
-    
+
         // Защита от отсутствия данных о воротах
         const goal = this._getGoalPosition(state);
         const goalDist = Math.hypot(state.pos.x - goal.x, state.pos.y - goal.y);
-        
+
         // Условия удара
         if (goalDist < 30) {
             return this._tryPassOrShoot(state, goal);
         }
         return this._dribble(taken);
     }
-    
+
     // Вспомогательные методы
     _getGoalPosition(state) {
         return {
@@ -124,27 +193,27 @@ class FuzzyController {
             angle: state.side === 'l' ? 0 : 180
         };
     }
-    
+
     _tryPassOrShoot(state, goal) {
         const teammates = state.myTeam?.filter(p => p.dist < 10) || [];
-        
+
         if (teammates.length > 0) {
             const bestReceiver = teammates.sort((a, b) => a.dist - b.dist)[0];
-            return { 
-                n: 'kick', 
-                v: `80 ${bestReceiver.angle || goal.angle}` 
+            return {
+                n: 'kick',
+                v: `80 ${bestReceiver.angle || goal.angle}`
             };
         }
-        return { 
-            n: 'kick', 
-            v: `100 ${goal.angle}` 
+        return {
+            n: 'kick',
+            v: `100 ${goal.angle}`
         };
     }
     _dribble(taken) {
         const state = taken.state
         // 1. Определение направления атаки
         const attackAngle = this._getAttackDirection(taken);
-        
+
         // 2. Расчет угла к мячу
         const ballRelAngle = state.ball.angle;
         const posDiff = attackAngle - ballRelAngle;
@@ -156,7 +225,7 @@ class FuzzyController {
     _getAttackDirection(taken) {
         const state = taken.state
         // Поиск флагов ворот
-        console.log("ATTACK dir",taken.side)
+        console.log("ATTACK dir", taken.side)
         const flags = this.attackFlags[taken.side];
         for (const flag of flags) {
             if (state.all_flags?.[flag]) {
@@ -217,7 +286,7 @@ class FuzzyController {
         const dx = ball.x - state.pos.x;
         const dy = ball.y - state.pos.y;
         const targetAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-        
+
         if (Math.abs(targetAngle) > 20) {
             return { n: 'turn', v: targetAngle };
         }
@@ -225,15 +294,15 @@ class FuzzyController {
     }
 
     _strategicPositioning(state) {
-        const strategicX = state.side === 'l' ? 
-            Math.min(40, state.pos.x + 10) : 
+        const strategicX = state.side === 'l' ?
+            Math.min(40, state.pos.x + 10) :
             Math.max(-40, state.pos.x - 10);
-            
+
         const dx = strategicX - state.pos.x;
         const angle = Math.atan2(0, dx) * 180 / Math.PI;
-        
-        return Math.abs(angle) > 15 ? 
-            { n: 'turn', v: angle } : 
+
+        return Math.abs(angle) > 15 ?
+            { n: 'turn', v: angle } :
             { n: 'dash', v: 60 };
     }
 
@@ -273,58 +342,58 @@ class FuzzyController {
         if (enemies.length === 0) {
             return state.rival_goal?.angle || 45; // Направление на ворота если противников нет
         }
-    
+
         // 2. Сбор углов противников с фильтрацией NaN
         const enemyAngles = enemies
             .map(e => e.angle)
             .filter(a => typeof a === 'number' && !isNaN(a));
-    
+
         // 3. Поиск безопасного сектора
         const sectorSize = 30; // Ширина сектора в градусах
         let bestSector = { start: -180, count: Infinity };
-        
+
         // Сканируем все возможные сектора
-        for (let start = -180; start <= 180; start += sectorSize/2) {
+        for (let start = -180; start <= 180; start += sectorSize / 2) {
             const end = start + sectorSize;
-            const count = enemyAngles.filter(a => 
+            const count = enemyAngles.filter(a =>
                 this._isAngleInSector(a, start, end)
             ).length;
-            
+
             if (count < bestSector.count) {
                 bestSector = { start, end, count };
             }
         }
-    
+
         // 4. Расчет оптимального направления
-        const safeAngle = (bestSector.start + bestSector.end)/2;
-        
+        const safeAngle = (bestSector.start + bestSector.end) / 2;
+
         // 5. Корректировка направления если мяч близко
         if (state.ball?.dist < 3) {
             return this._adjustAngleForBall(safeAngle, state);
         }
-    
+
         return safeAngle;
     }
-    
+
     // Вспомогательные методы
     _isAngleInSector(angle, start, end) {
         angle = ((angle % 360) + 360) % 360; // Нормализация 0-360
         start = ((start % 360) + 360) % 360;
         end = ((end % 360) + 360) % 360;
-        
-        return (start <= end) 
+
+        return (start <= end)
             ? (angle >= start && angle <= end)
             : (angle >= start || angle <= end);
     }
-    
+
     _adjustAngleForBall(baseAngle, state) {
         // Учет текущей ориентации игрока
         const currentDir = state.direction || 0;
         const angleDiff = Math.abs(baseAngle - currentDir);
-        
+
         // Плавная коррекция если разница больше 45°
-        return angleDiff > 45 
-            ? currentDir + (baseAngle - currentDir)*0.7
+        return angleDiff > 45
+            ? currentDir + (baseAngle - currentDir) * 0.7
             : baseAngle;
     }
 

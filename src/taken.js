@@ -2,7 +2,7 @@ const utils = require("./utils");
 const Flags = require('./flags');
 
 class Taken{
-	constructor(side){
+	constructor(){
 		this.state = {}; // хранит информацию по данным зрения
 		this.p = {};
         this.fw_p = 1;
@@ -10,6 +10,8 @@ class Taken{
 		this.x_boundary = 57.5;
 		this.y_boundary = 39;
         this.see_forward = false;
+        this.start_x = null
+        this.start_y = null
 		this.resetState();
 	}	
 
