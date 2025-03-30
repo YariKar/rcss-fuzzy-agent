@@ -1,71 +1,46 @@
-// controllers/baseController.js
 class BaseController {
     constructor(agent) {
-        this.agent = agent;
-        this.worldModel = {
-            ball: null,
-            teammates: [],
-            opponents: [],
-            flags: [],
-            playMode: 'before_kick_off'
-        };
+      this.agent = agent;
+      this.worldModel = {
+        ball: null,
+        flags: [],
+        playMode: 'before_kick_off'
+      };
     }
-
+  
     updateWorldModel(objects) {
-        this.worldModel.ball = objects.find(o => o.type === 'ball') || this.worldModel.ball;
-        this.worldModel.teammates = objects.filter(o => o.type === 'player' && o.team === this.agent.team);
-        this.worldModel.opponents = objects.filter(o => o.type === 'player' && o.team !== this.agent.team);
-        this.worldModel.flags = objects.filter(o => o.type === 'flag');
+      this.worldModel.ball = objects.find(o => o.type === 'ball');
+      this.worldModel.flags = objects.filter(o => o.type === 'flag');
     }
-
-    processHear(data) {
-        const [time, source, message] = data;
-        if (source === 'referee') {
-            this.worldModel.playMode = message;
-        }
+  
+    handleRefereeCommand(command) {
+      this.worldModel.playMode = command;
     }
-
-    processSenseBody(data) {
-        this.bodyState = data;
+  
+    getDefaultAction() {
+      if (this.worldModel.ball?.distance < 1.5) {
+        return {n: 'kick', v: '100 0'};
+      }
+      return {n: 'dash', v: '50'};
     }
-
-    decideAction() {
-        // Базовые правила для всех игроков
-        if (this.isBallClose()) {
-            return this.handleBallPossession();
-        }
-        return this.positioning();
-    }
-
-    // Нечеткие функции принадлежности
+  
+    // Нечеткие функции
     fuzzyDistance(d) {
-        return {
-            veryNear: Math.max(0, 1 - d/3),
-            near: Math.max(0, 1 - Math.abs(d-5)/3),
-            far: Math.max(0, (d-7)/10)
-        };
+      return {
+        close: Math.max(0, 1 - d/5),
+        medium: Math.exp(-Math.pow(d-7, 2)/8),
+        far: Math.tanh(d/10)
+      };
     }
-
-    fuzzyAngle(a) {
-        return {
-            front: Math.max(0, 1 - Math.abs(a)/30),
-            left: Math.max(0, a/45),
-            right: Math.max(0, -a/45)
-        };
+  
+    fuzzyDirection(a) {
+      const absAngle = Math.abs(a);
+      return {
+        front: Math.max(0, 1 - absAngle/30),
+        side: Math.exp(-Math.pow(absAngle-45, 2)/800),
+        back: Math.max(0, absAngle/60 - 0.5)
+      };
     }
-
-    // Базовые методы для наследования
-    isBallClose() {
-        return this.worldModel.ball?.distance < 5;
-    }
-
-    handleBallPossession() {
-        // Заглушка для реализации в наследниках
-    }
-
-    positioning() {
-        // Заглушка для реализации в наследниках
-    }
-}
-
-module.exports = BaseController
+  }
+  
+  module.exports = BaseController;

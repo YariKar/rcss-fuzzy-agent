@@ -1,98 +1,33 @@
-const BaseController = require("./base_controller")
+const BaseController = require('./base_controller');
 
 class FieldPlayerController extends BaseController {
-    constructor(agent) {
-        super(agent);
-        this.aggressiveness = this.getRoleAggressiveness();
-        this.homePosition = this.agent.position;
+  decideAction() {
+    const {ball} = this.worldModel;
+    const goal = this.worldModel.flags.find(f => 
+      f.name === (this.agent.side === 'l' ? 'f g r' : 'f g l')
+    );
+
+    if (!ball) return this.getDefaultAction();
+
+    // Нечеткая логика
+    const ballDist = this.fuzzyDistance(ball.distance);
+    const goalDist = goal ? this.fuzzyDistance(goal.distance) : {far: 1};
+    
+    const attackUrgency = ballDist.close * 0.8 + goalDist.far * 0.2;
+    
+    if (attackUrgency > 0.7) {
+      return {
+        n: 'kick',
+        v: `100 ${goal ? goal.direction : this.agent.side === 'l' ? 0 : 180}`
+      };
     }
 
-    getRoleAggressiveness() {
-        switch(this.agent.role) {
-            case 'defender': return 0.3;
-            case 'midfielder': return 0.6;
-            case 'forward': return 0.9;
-            default: return 0.5;
-        }
+    if (ballDist.close > 0.3) {
+      return {n: 'turn', v: ball.direction};
     }
 
-    decideAction() {
-        if (this.isBallClose()) {
-            return this.handleBallPossession();
-        }
-        
-        const attackChance = this.calculateAttackChance();
-        if (attackChance > 0.7) {
-            return this.attack();
-        }
-        return this.positioning();
-    }
-
-    calculateAttackChance() {
-        const ball = this.worldModel.ball;
-        const goal = this.findOpponentGoal();
-        
-        const distToBall = this.fuzzyDistance(ball.distance);
-        const angleToGoal = this.fuzzyAngle(goal.direction);
-        
-        return Math.min(
-            distToBall.near * 1.2,
-            angleToGoal.front * this.aggressiveness
-        );
-    }
-
-    handleBallPossession() {
-        const teammates = this.worldModel.teammates;
-        const bestPass = this.findBestPassReceiver();
-        
-        if (bestPass && Math.random() < 0.6) {
-            this.agent.socketSend('kick', `${bestPass.direction} 40`);
-        } else {
-            this.agent.socketSend('kick', '100 0');
-        }
-    }
-
-    findBestPassReceiver() {
-        return this.worldModel.teammates
-            .filter(p => p.distance > 10 && p.distance < 30)
-            .sort((a,b) => b.distance - a.distance)[0];
-    }
-
-    attack() {
-        const goal = this.findOpponentGoal();
-        this.agent.socketSend('dash', '100');
-        if (goal) {
-            this.agent.socketSend('turn', goal.direction);
-        }
-    }
-
-    findOpponentGoal() {
-        return this.worldModel.flags.find(f => 
-            this.agent.side === 'l' ? f.name === 'f g r' : f.name === 'f g l'
-        );
-    }
-
-    positioning() {
-        const ballDirection = this.worldModel.ball?.direction || 0;
-        const positionOffset = this.getPositionOffset();
-        
-        this.agent.socketSend('move', 
-            `${this.homePosition.x + positionOffset.x} 
-            ${this.homePosition.y + positionOffset.y}`);
-    }
-
-    getPositionOffset() {
-        switch(this.agent.role) {
-            case 'defender':
-                return {x: -5, y: 0};
-            case 'midfielder':
-                return {x: 10, y: Math.sin(Date.now()/1000)*5};
-            case 'forward':
-                return {x: 20, y: 0};
-            default:
-                return {x: 0, y: 0};
-        }
-    }
+    return {n: 'dash', v: '100'};
+  }
 }
 
-module.exports = FieldPlayerController
+module.exports = FieldPlayerController;
