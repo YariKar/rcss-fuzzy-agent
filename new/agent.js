@@ -22,6 +22,12 @@ class Agent {
       : new FieldPlayerController(this);
   }
 
+  processInit(params) {
+    this.state.unum = parseInt(params[1]);
+    console.log(`Initialized as ${this.side} player ${this.state.unum}`);
+    this.socketSend('change_view', 'high normal'); // Устанавливаем нормальный обзор
+  }
+
   setSocket(socket) {
     this.socket = socket;
   }
@@ -57,32 +63,49 @@ class Agent {
     }
   }
 
+  // Модифицируем метод обработки see
   processSee(data) {
+    console.log('Raw see data:', data);
     const objects = this.parseSeeData(data);
+    console.log('Parsed objects:', objects);
     this.updateWorldModel(objects);
     this.action = this.controller.decideAction();
   }
 
   parseSeeData(data) {
     return data.slice(1).map(obj => {
-      if (!obj?.p) return null;
-      switch(obj.p[0]) {
-        case 'b': return this.parseBall(obj.p.slice(1));
-        case 'p': return this.parsePlayer(obj.p.slice(1));
-        case 'f': return this.parseFlag(obj.p.slice(1));
-        default: return null;
+      if (!obj?.cmd?.p) return null;
+      
+      const type = obj.cmd.p[0];
+      const params = obj.p;
+  
+      switch(type) {
+        case 'b': 
+          return this.parseBall(params);
+        case 'p': 
+          return this.parsePlayer(params);
+        case 'f': 
+          return this.parseFlag(params);
+        default: 
+          return null;
       }
     }).filter(Boolean);
   }
 
+  // Обновляем парсинг мяча
   parseBall(params) {
-    return {
-      type: 'ball',
-      distance: params[0],
-      direction: params[1],
-      distChange: params[2] || 0,
-      dirChange: params[3] || 0
-    };
+    try {
+      return {
+        type: 'ball',
+        distance: parseFloat(params[0]),
+        direction: parseFloat(params[1]),
+        distChange: params[2] || 0,
+        dirChange: params[3] || 0
+      };
+    } catch (e) {
+      console.error('Ball parse error:', params);
+      return null;
+    }
   }
 
   parsePlayer(params) {
@@ -104,9 +127,12 @@ class Agent {
     };
   }
 
+  // Модифицируем метод обновления модели
   updateWorldModel(objects) {
-    this.state.ball = objects.find(o => o.type === 'ball');
-    this.state.flags = objects.filter(o => o.type === 'flag');
+    console.log("UPDATE WORD MODEL", objects)
+    this.state.ball = objects.find(o => o?.type === 'ball');
+    this.state.flags = objects.filter(o => o?.type === 'flag');
+    console.log('Ball in world model:', this.state.ball);
   }
 
   processHear(data) {
@@ -134,11 +160,15 @@ class Agent {
     }
   }
 
-  executeAction() {
-    if (this.action && this.socket) {
-      this.socketSend(this.action.n, this.action.v);
-      this.action = null;
+  async executeAction() {
+    if (!this.action) return;
+    
+    console.log("EXECUTE ACTION:", this.action);
+    if (this.socket) {
+      await this.socketSend(this.action.n, this.action.v);
+      await new Promise(resolve => setTimeout(resolve, 50)); // Задержка
     }
+    this.action = null;
   }
 }
 

@@ -9,6 +9,7 @@ class BaseController {
     }
   
     updateWorldModel(objects) {
+        console.log("UPDATE WORD MODEL", objects)
       this.worldModel.ball = objects.find(o => o.type === 'ball');
       this.worldModel.flags = objects.filter(o => o.type === 'flag');
     }
@@ -18,11 +19,15 @@ class BaseController {
     }
   
     getDefaultAction() {
-      if (this.worldModel.ball?.distance < 1.5) {
-        return {n: 'kick', v: '100 0'};
+        if (this.worldModel.ball) {
+          if (this.worldModel.ball.distance < 2.0) {
+            return {n: 'kick', v: '100 0'};
+          }
+          return {n: 'dash', v: '80'};
+        }
+        // Поворот для поиска мяча
+        return {n: 'turn', v: '60'};
       }
-      return {n: 'dash', v: '50'};
-    }
   
     // Нечеткие функции
     fuzzyDistance(d) {

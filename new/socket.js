@@ -9,7 +9,7 @@ module.exports = async (agent, teamName, version, isGoalie = false) => {
     socket.sendMsg = async (msg) => { // Отравка сообщения серверу
         return new Promise((resolve, reject) => {
             socket.send(Buffer.from(msg), 6000, 'localhost', (err, bytes) => {
-                console.log(isGoalie, msg)
+                //console.log(isGoalie, msg)
                 if (err) reject(err)
                 resolve(bytes)
             })
