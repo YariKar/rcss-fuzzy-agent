@@ -73,66 +73,73 @@ class Agent {
   }
 
   parseSeeData(data) {
-    return data.slice(1).map(obj => {
-      if (!obj?.cmd?.p) return null;
-      
-      const type = obj.cmd.p[0];
-      const params = obj.p;
+    const objects = [];
+    for (let i = 1; i < data.length; i++) {
+      const item = data[i];
+      if (!item?.cmd?.p) continue;
   
-      switch(type) {
-        case 'b': 
-          return this.parseBall(params);
-        case 'p': 
-          return this.parsePlayer(params);
-        case 'f': 
-          return this.parseFlag(params);
-        default: 
-          return null;
+      try {
+        const type = item.cmd.p[0];
+        const params = item.p;
+  
+        switch(type) {
+          case 'b': // Обработка мяча
+            if (params.length >= 2) {
+              objects.push({
+                type: 'ball',
+                distance: parseFloat(params[0]),
+                direction: parseFloat(params[1]),
+                distChange: params[2] ? parseFloat(params[2]) : 0,
+                dirChange: params[3] ? parseFloat(params[3]) : 0
+              });
+            }
+            break;
+  
+          case 'p': // Обработка игроков
+            const playerData = item.cmd.p;
+            const team = playerData[1]?.replace(/"/g, '') || 'unknown';
+            const id = playerData[2] ? parseInt(playerData[2]) : null;
+            
+            if (params.length >= 2) {
+              objects.push({
+                type: 'player',
+                team,
+                id,
+                distance: parseFloat(params[0]),
+                direction: parseFloat(params[1])
+              });
+            }
+            break;
+  
+          case 'f': // Обработка флагов
+            const flagName = item.cmd.p.slice(1).join(' ');
+            if (params.length >= 2) {
+              objects.push({
+                type: 'flag',
+                name: flagName,
+                distance: parseFloat(params[0]),
+                direction: parseFloat(params[1])
+              });
+            }
+            break;
+  
+          default:
+            // Игнорируем другие объекты (g, l и т.д.)
+        }
+      } catch (e) {
+        console.error('Parse error:', e, 'Item:', JSON.stringify(item));
       }
-    }).filter(Boolean);
-  }
-
-  // Обновляем парсинг мяча
-  parseBall(params) {
-    try {
-      return {
-        type: 'ball',
-        distance: parseFloat(params[0]),
-        direction: parseFloat(params[1]),
-        distChange: params[2] || 0,
-        dirChange: params[3] || 0
-      };
-    } catch (e) {
-      console.error('Ball parse error:', params);
-      return null;
     }
+    return objects;
   }
 
-  parsePlayer(params) {
-    return {
-      type: 'player',
-      team: params[0],
-      id: parseInt(params[1]),
-      distance: params[2],
-      direction: params[3]
-    };
-  }
-
-  parseFlag(params) {
-    return {
-      type: 'flag',
-      name: params.slice(0, -2).join(' '),
-      distance: params[params.length-2],
-      direction: params[params.length-1]
-    };
-  }
-
-  // Модифицируем метод обновления модели
   updateWorldModel(objects) {
-    console.log("UPDATE WORD MODEL", objects)
+    console.log("UPDATE WORLD MODEL", objects);
+    // Передаем данные в контроллер
+    this.controller.updateWorldModel(objects);
+    // Также обновляем состояние агента
     this.state.ball = objects.find(o => o?.type === 'ball');
     this.state.flags = objects.filter(o => o?.type === 'flag');
-    console.log('Ball in world model:', this.state.ball);
   }
 
   processHear(data) {
