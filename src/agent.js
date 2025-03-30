@@ -325,7 +325,6 @@ class Agent {
                 this.taken.turnData = "ft0";
                 console.log("GOAL", this.start_x, this.start_y, this.position, this.goalie)
                 return;
-                //'move', `${player.start_x} ${player.start_y}`
             }
 
             if (p[2].includes("play")){
@@ -338,45 +337,26 @@ class Agent {
             this.taken.side = p[0];           
         }
 
-        if (this.manager){
-            this.oldVers(msg, cmd, p);    
-            return;
-        }
-
         if (cmd === "sense_body"){
-            //console.log(p);
-            //console.log("Direction!!!!", p[3]['p'][1], p[0]);
             this.direction = p[3]['p'][1];
         }  
 
         if (cmd === "see"){
-            // const fuzzyDecision = this.fuzzySystem.evaluateEnvironment();
-            // //console.log("FUZZY", fuzzyDecision, this.position, this.teamName, this.goalie)
-            // if(fuzzyDecision && fuzzyDecision.immediate) {
-            //     this.act = fuzzyDecision.command;
-            //     return;
-            // }
 
             if (this.next_act){
                 this.act = this.next_act;
-                //console.log("ACT: ", this.act, p[0]);
                 this.next_act = null;
                 return;
             }
 
-            //console.log(this.taken.state['ball']);
             this.taken.state['time'] = p[0];
             this.taken.set(p);
 
             if (this.controllers){ 
-                //console.log("AGENT", this.taken, this.goalie)
-                if (this.goalie){ //TODO
-                    //console.log("FUZZY agent", this.fuzzySystem)
-                    this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
-                    console.log("FUZZY GOALIE act", this.act, this.position)
-                } else{
-                    this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
-                }
+                console.log(`BEFORE EXECUTE params isgoalie=${this.goalie}, bottom=${this.bottom}, top=${this.top}, direction=${this.direction}, center=${this.center}`)
+                console.log("BEFORE EXECUTE taken", this.taken)
+                this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
+                console.log("FUZZY act",this.goalie, this.act,)
                 
                 //console.log(this.act);
                 if (Array.isArray(this.act)){

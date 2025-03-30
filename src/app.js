@@ -20,7 +20,7 @@ function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x
     agent.controllers = controllers;
     agent.start_x = start_x;
     agent.start_y = start_y;
-    agent.fuzzySystem = new FuzzyController(agent.position)
+    agent.fuzzySystem = new FuzzyController()
     return agent;
 }
 

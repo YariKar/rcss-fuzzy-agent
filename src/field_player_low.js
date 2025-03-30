@@ -1,25 +1,11 @@
 const utils = require("./utils");
 
-const CTRL_LOW = {
-	name: "player_low",
-	execute(taken, controllers, bottom, top, direction, center){
-		if (!taken.state.pos){
-			return {n: "turn", v: 10};
-		}
-		const next = controllers.slice(1)[0];
-		if (!taken.state.ball){
-			//console.log("return in Zone");
-			let act = utils.returnInZone(taken.state.pos.y, bottom, top, direction, taken);
-			if (act){
-				return act;
-			}
-			//console.log("in Zone. Finding ball");
-			return utils.turn(1, 90);
-		}
-		if (next){
-			return next.execute(taken, controllers.slice(1), bottom, top, direction, center);
-		} 
-	}
-}
+const CTRL_LOW_PLAYER = {
+    execute(taken, controllers, fuzzy) {
+        const action = fuzzy.evaluatePlayer(taken.state);
+		console.log("PLAYER LOW", this.action )
+        return action || controllers[1].execute(taken, controllers, fuzzy);
+    }
+};
 
-module.exports = CTRL_LOW;
+module.exports = CTRL_LOW_PLAYER;
