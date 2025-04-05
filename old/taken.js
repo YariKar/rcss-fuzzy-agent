@@ -15,10 +15,6 @@ class Taken{
         this.bottom = null
         this.top = null
         this.center = null
-        this.side = null
-        this.last_ball_pos = {x: null, y: null, tact_count: null}
-        this.last_pos = {x: null, y: null, tact_count: null}
-        this.last_act = {n: null, v: null}
 		this.resetState();
 	}	
 

@@ -1,18 +1,24 @@
 const Agent = require('./agent');
 const Socket = require('./socket');
+const low_ctrl = require("./field_player_low");
+const high_ctrl = require("./field_player_high");
 const VERSION = 7;
 
+const goalie_low = require("./ctrl_low");
+const goalie_middle = require("./ctrl_middle");
+const goalie_high = require("./ctrl_high");
 const FuzzyController = require('./fuzzy-controller');
 
 const teamName = "Puck"
 const anotherTeamName = "B"
 
-function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, number = -1){
+function createAgent(team, goalkeeper, controllers, bottom, top, center, start_x, start_y, side='l'){
 
-    let agent = new Agent(team, goalkeeper, number);
+    let agent = new Agent(team, goalkeeper, side);
     agent.bottom = bottom;
     agent.top = top;
     agent.center = center;
+    agent.controllers = controllers;
     agent.start_x = start_x;
     agent.start_y = start_y;
     agent.taken.start_x = start_x
@@ -59,11 +65,9 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
     // const side = 'l'
     // const anotherSide = 'r'
     
-    for (i = 0; i<A_team.length;i++){
-        let pl = A_team[i]
-        let number = i+2
-        players.push(createAgent(teamName, false, 
-            pl[1], pl[0], pl[2], pl[3], pl[4], number))
+    for (const pl of A_team){
+        players.push(createAgent(teamName, false, [low_ctrl, high_ctrl], 
+            pl[1], pl[0], pl[2], pl[3], pl[4]))
     }
     
     
@@ -78,9 +82,9 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
         const goalie = createAgent(
             team,
             true,
+            [goalie_low, goalie_middle, goalie_high], // Контроллеры
             -50, 0, 0, // Позиция
             -50, 0,
-            1
         );
         goalie.taken.action = "return";
         goalie.taken.turnData = "ft0";

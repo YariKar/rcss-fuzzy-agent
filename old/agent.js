@@ -1,12 +1,13 @@
 const Msg = require('./msg');
 const utils = require("./utils");
 const Flags = require('./flags');
+const TManager = require('./timeMacineManager');
 const Taken = require("./taken");
 const FuzzyController = require('./fuzzy-controller');
 
 class Agent {
-    constructor(teamName, goalkeeper, number = -1) {
-        this.position = null
+    constructor(teamName, goalkeeper, side='l') {
+        this.position = side; 
         this.run = true; // Игра начата
         this.act = null; // Действия
         this.rotationSpeed = null; // скорость вращения
@@ -25,6 +26,7 @@ class Agent {
         this.prevTact = null;
         this.playerName = "";
         this.state = {'time': 0}; // текущее состояние игрока
+        this.TManager = TManager;
         this.taken = new Taken();
         this.taken.team = teamName;
         this.ta = null;
@@ -39,7 +41,6 @@ class Agent {
         this.center = null;
         this.direction = null;
         this.fuzzySystem = null
-        this.number = number
 
     }
 
@@ -284,6 +285,22 @@ class Agent {
         this.state['directionOfSpeed'] = data[3]['p'][1];
     }
 
+    oldVers(msg, cmd, p){
+        if (cmd === "hear"){
+            if (p[2] === "play_on"){
+                this.run = true;
+            }
+        }
+
+        if (!this.run){
+            return;
+        }
+        if (cmd === "see"){
+            this.act = this.manager.getAction(this.dt, p, cmd);    
+        }
+        
+    }
+
     analyzeEnv(msg, cmd, p) {
         if (cmd == "hear"){
             //console.log("P", p);
@@ -318,8 +335,7 @@ class Agent {
 
         if (cmd === "init"){
             console.log("SET TAKEN SIDE",this.teamName, this.goalie, p[0])
-            this.taken.side = p[0]; 
-            this.position = p[0]          
+            this.taken.side = p[0];           
         }
 
         if (cmd === "sense_body"){
@@ -336,13 +352,24 @@ class Agent {
 
             this.taken.state['time'] = p[0];
             this.taken.set(p);
-            if (this.fuzzySystem){
-                console.log("BEFORE ACTION", this)
-                this.act = this.fuzzySystem.execute(this.taken)
-                console.log("ACTION", this.number, this.taken.side, this.act)
-            }
-            else{
-                console.log("NO FUZZY DECISION SYSTEM! for", this.number, this.taken.side)
+
+            if (this.controllers){ 
+                console.log(`BEFORE EXECUTE params isgoalie=${this.goalie}, bottom=${this.bottom}, top=${this.top}, direction=${this.direction}, center=${this.center}`)
+                console.log("BEFORE EXECUTE taken", this.taken)
+                this.act = this.controllers[0].execute(this.taken, this.controllers, this.fuzzySystem)
+                console.log("FUZZY act",this.goalie, this.act,)
+                
+                //console.log(this.act);
+                if (Array.isArray(this.act)){
+                    this.next_act = this.act[1];
+                    this.act = this.act[0];
+                    
+                    //console.log("act", this.act);
+                    //console.log("next_act", this.next_act);
+                } 
+                //console.log("ACT: ", this.act, p[0]);
+            } else {
+                this.act = this.TManager.getAction(this.taken, this.ta);
             }
 
             // Вызов автомата
