@@ -3,7 +3,7 @@ const Socket = require('./socket');
 const VERSION = 7;
 
 const FuzzyController = require('./fuzzy-controller');
-
+const FuzzyControllerGoalie = require('./fuzzy-controller-goalie');
 const teamName = "Puck"
 const anotherTeamName = "B"
 
@@ -20,7 +20,12 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
     agent.taken.top = top
     agent.taken.bottom = bottom
     agent.taken.center = center
-    agent.fuzzySystem = new FuzzyController()
+    if (goalkeeper){
+        agent.fuzzySystem = new FuzzyControllerGoalie();
+    } else{
+        agent.fuzzySystem = new FuzzyController()
+    }
+    
     return agent;
 }
 

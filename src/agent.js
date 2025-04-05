@@ -329,8 +329,12 @@ class Agent {
         if (cmd === "see"){
 
             if (this.next_act){
-                this.act = this.next_act;
-                this.next_act = null;
+                this.act = this.next_act[0];
+                if (this.next_act.length > 1){
+                    this.next_act = this.next_act.slice(1);
+                } else{
+                    this.next_act = null
+                }
                 return;
             }
 
@@ -343,6 +347,10 @@ class Agent {
                 if (this.act!=null){
                     this.taken.last_act = this.act
                 }
+                if (Array.isArray(this.act)){
+                    this.next_act = this.act.slice(1);
+                    this.act = this.act[0];
+                } 
             }
             else{
                 console.log("NO FUZZY DECISION SYSTEM! for", this.number, this.taken.side)
