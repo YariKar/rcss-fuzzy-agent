@@ -20,4 +20,4 @@ rcssserver
 
 rcssmonitor
 
-run.sh
+bash run.sh
