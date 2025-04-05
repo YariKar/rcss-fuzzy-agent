@@ -340,6 +340,9 @@ class Agent {
                 console.log("BEFORE ACTION", this)
                 this.act = this.fuzzySystem.execute(this.taken)
                 console.log("ACTION", this.number, this.taken.side, this.act)
+                if (this.act!=null){
+                    this.taken.last_act = this.act
+                }
             }
             else{
                 console.log("NO FUZZY DECISION SYSTEM! for", this.number, this.taken.side)

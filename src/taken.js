@@ -16,8 +16,8 @@ class Taken{
         this.top = null
         this.center = null
         this.side = null
-        this.last_ball_pos = {x: null, y: null, tact_count: null}
-        this.last_pos = {x: null, y: null, tact_count: null}
+        this.last_ball_pos = {ball: null, tact_count: 0}
+        this.last_pos = {pos: null, tact_count: 0}
         this.last_act = {n: null, v: null}
 		this.resetState();
 	}	
@@ -229,6 +229,19 @@ class Taken{
         } else {
             this.state.goal = this.state.all_flags['gr'];
             this.state.rival_goal = this.state.all_flags['gl'];
+        }
+        console.log("WRITE SEE DATA", this.state.pos, this.state.ball)
+        if (this.state.pos != null){
+            this.last_pos.pos = this.state.pos
+            this.last_pos.tact_count = 0
+        } else{
+            this.last_pos.tact_count++;
+        }
+        if (this.state.ball != null){
+            this.last_ball_pos.ball = this.state.ball
+            this.last_ball_pos.tact_count = 0
+        } else{
+            this.last_ball_pos.tact_count++;
         }
     }
 
