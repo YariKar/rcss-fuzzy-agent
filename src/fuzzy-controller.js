@@ -19,6 +19,9 @@ class FuzzyController {
             },
             teamPositioning: {
                 closer: 0, equal: 0, farther: 0
+            },
+            gatePossibility: {
+                free: 0, partly: 0, block: 0
             }
         };
 
@@ -79,12 +82,12 @@ class FuzzyController {
 
     teamPositioningMF(taken) {
         console.log("TEAM POS", taken.state.myTeam)
-        const CLOSER_MAX = 1 
-        const EQUAL_MIN =  1   
+        const CLOSER_MAX = 1
+        const EQUAL_MIN = 1
         const EQUAL_MAX = 3
-        const FARTHER_MIN = 3  
+        const FARTHER_MIN = 3
         const selfDist = taken.state.ball.dist || calculations.distance(taken.state.pos, taken.state.ball);
-        let closerCount  = 0;
+        let closerCount = 0;
         taken.state?.myTeam.forEach(teammate => {
             console.log("TEAMMATE", teammate, taken.state.ball)
             if (calculations.distance(teammate, taken.state.ball) < selfDist) {
@@ -94,17 +97,61 @@ class FuzzyController {
         return {
             closer: calculations.trapezoidMF(closerCount, [-1, -1, 0, CLOSER_MAX]),
             equal: calculations.trapezoidMF(closerCount, [
-              EQUAL_MIN - 1,
-              EQUAL_MIN,
-              EQUAL_MAX,
-              EQUAL_MAX + 1
+                EQUAL_MIN - 1,
+                EQUAL_MIN,
+                EQUAL_MAX,
+                EQUAL_MAX + 1
             ]),
             farther: calculations.trapezoidMF(closerCount, [
-              FARTHER_MIN - 1,
-              FARTHER_MIN,
-              11, 11 // Макс 10 игроков
+                FARTHER_MIN - 1,
+                FARTHER_MIN,
+                11, 11 // Макс 10 игроков
             ])
-          };
+        };
+    }
+
+    gatePossibilityMF(taken) {
+        const side = taken.side || "l"; // Определяем сторону команды
+        const flags = side === "l" ? ["gr", "fgrt", "fgrb"] : ["gl", "fglt", "fglb"];
+        // Получаем флаги с их именами
+        const visibleFlags = Object.entries(taken.state.all_flags || {})
+            .filter(([name]) => flags.includes(name))
+            .map(([name, data]) => ({ name, ...data }));
+        console.log("GATE FLAGS", taken.state.all_flags, visibleFlags, flags)
+        // Если ни один флаг ворот не виден
+        if (visibleFlags.length === 0) {
+            return { free: 0, partly: 0, block: 1 };
+        }
+
+        // Находим ближайший флаг ворот
+        const nearestFlag = visibleFlags.reduce((closest, flag) => {
+            const dist = calculations.distance(taken.state.pos, flag);
+            return dist < closest.dist ? { dist, flag } : closest;
+        }, { dist: Infinity, flag: null });
+
+        // Координаты центра ворот (пример для левых ворот)
+        const goalCenter = {
+            x: side === "l" ? 52.5 : -52.5,
+            y: 0
+        };
+
+        // Расстояние до центра ворот с учетом позиции игрока
+        const goalDist = calculations.distance(taken.state.pos, goalCenter);
+
+        // Функции принадлежности
+        const partlyMF = calculations.trapezoidMF(goalDist, [15, 20, 105, 105]);
+        const freeMF = calculations.trapezoidMF(goalDist, [5, 10, 15, 20]);
+
+        // Учет угла обзора ворот
+        const angleToGoal = Math.abs(calculations.calculateAngle(taken.state.pos, goalCenter));
+        const angleFactor = 1 - Math.min(angleToGoal / 45, 1); // 0-45 градусов
+        //console.log("ALL GATE POS", nearestFlag, goalCenter, goalDist, partlyMF, freeMF, angleToGoal, angleFactor)
+        return {
+            free: Math.min(freeMF, angleFactor),
+            partly: Math.min(partlyMF, 1 - freeMF),
+            block: 0
+        };
+
     }
 
     calculateKnowMatchFunctionValues(taken) {
@@ -135,17 +182,35 @@ class FuzzyController {
         console.log("TEAM POS RESULT", this.variables.teamPositioning)
 
 
-        if (this.variables.ballDistance.far > 0.8){
+        if (this.variables.ballDistance.far > 0.8) {
             console.log("BALL FAR: positioning", this.variables.ballDistance)
             return actions.positioning(taken)
         }
-        if (this.variables.ballDistance.near>= 0.3){
+        if (this.variables.ballDistance.near >= 0.3) {
+            if (this.variables.teamPositioning.farther >= 0.5) {
+                console.log("BALL NEAR, FARTHER: positioning")
+                return actions.positioning(taken)
+            }
             console.log("BALL NEAR: move", this.variables.ballDistance)
             return actions.moveToBall(taken)
         }
-        if (this.variables.ballDistance.close>=0.7){
-            console.log("BALL CLOSE: kick", this.variables.ballDistance)
-            return {n: "kick", v: "100 "+(-taken.state.ball?.angle)}
+        this.variables.gatePossibility = this.gatePossibilityMF(taken)
+        console.log("GATE POS:", this.variables.gatePossibility)
+        if (this.variables.ballDistance.close >= 0.7) {
+            if (this.variables.gatePossibility.free >= 0.5) {
+                console.log("GATE FREE: shoot", this.variables.gatePossibility, taken.state.pos)
+                return actions.shoot(taken)
+            }
+            if (this.variables.gatePossibility.partly>=0.7){
+                console.log("GATE PARTLY: dribble", this.variables.gatePossibility, taken.state.pos)
+                return actions.dribbling(taken)
+            }
+            if (this.variables.gatePossibility.block>=0.7){
+                console.log("GATE BLOCK: turn ball", this.variables.gatePossibility, taken.state.pos)
+                return actions.ballTurn(taken)
+            }
+            //console.log("BALL CLOSE: kick", this.variables.ballDistance)
+            //return { n: "kick", v: "100 " + (-taken.state.ball?.angle) }
         }
 
         // Заглушка для "знает" - можно добавить другую логику

@@ -40,6 +40,32 @@ module.exports = {
         
         const dashPower = Math.min(100, ballDist * 20); // Коэффициент скорости
         return { n: "dash", v: dashPower }
+    },
+
+    shoot(taken){
+        let side = taken.side;
+        let flags, plus;
+        if (side == "l"){
+            flags = ["fgrt", "gr", "fgrb"];
+            plus = [5, 0, -5];
+        } else {
+            flags = ['fglt', 'gl', 'fglb'];
+            plus = [-5, 0, 5];
+        }
+        for (let i = 0; i < 3; i++){
+            let flag = flags[i];
+            if (taken.state.all_flags[flag]){
+                return {n: "kick", v: "100 " + (taken.state.all_flags[flag].angle + plus[i])};
+            }
+        }
+    },
+
+    dribbling(taken){
+        return {n: "kick", v: "25"}
+    },
+
+    ballTurn(taken){
+        return {n: "kick", v: "5 60"}
     }
 
 }
