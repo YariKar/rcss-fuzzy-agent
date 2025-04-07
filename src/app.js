@@ -7,7 +7,7 @@ const FuzzyControllerGoalie = require('./fuzzy-controller-goalie');
 const teamName = "Puck"
 const anotherTeamName = "B"
 
-function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, number = -1){
+function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, number = -1, defaultNearestTeammate) {
 
     let agent = new Agent(team, goalkeeper, number);
     agent.bottom = bottom;
@@ -20,12 +20,18 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
     agent.taken.top = top
     agent.taken.bottom = bottom
     agent.taken.center = center
-    if (goalkeeper){
+    agent.taken.last_seen_teammate = {
+        dist: null,
+        angle: null,
+        x: defaultNearestTeammate[3],
+        y: defaultNearestTeammate[4]
+    }
+    if (goalkeeper) {
         agent.fuzzySystem = new FuzzyControllerGoalie();
-    } else{
+    } else {
         agent.fuzzySystem = new FuzzyController()
     }
-    
+
     return agent;
 }
 
@@ -63,35 +69,36 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
     let players = [];
     // const side = 'l'
     // const anotherSide = 'r'
-    
-    for (i = 0; i<A_team.length;i++){
+
+    for (i = 0; i < A_team.length; i++) {
         let pl = A_team[i]
-        let number = i+2
-        players.push(createAgent(teamName, false, 
-            pl[1], pl[0], pl[2], pl[3], pl[4], number))
+        let number = i + 2
+        players.push(createAgent(teamName, false,
+            pl[1], pl[0], pl[2], pl[3], pl[4], number, A_team[5]))
     }
-    
-    
+
+
     // for (const pl of B_team){
     //     players.push(createAgent(anotherTeamName, false, [low_ctrl, high_ctrl], 
     //         pl[1], pl[0], pl[2], pl[3], pl[4]))
     // }
-    
 
-    
+
+
     const createGoalie = (team) => {
         const goalie = createAgent(
             team,
             true,
             -50, 0, 0, // Позиция
             -50, 0,
-            1
+            1,
+            A_team[5]
         );
         goalie.taken.action = "return";
         goalie.taken.turnData = "ft0";
         return goalie;
     };
-    
+
     let goalkeeper_A = createGoalie(teamName);
     // let goalkeeper_B = createGoalie(anotherTeamName);
 
@@ -102,7 +109,7 @@ function createAgent(team, goalkeeper, bottom, top, center, start_x, start_y, nu
     // await goalkeeper_B.socketSend('move', `${goalkeeper_B.start_x} ${goalkeeper_B.start_y}`);
 
 
-    for (const player of players){
+    for (const player of players) {
         await Socket(player, player.teamName, VERSION);
         //console.log("move ", player.start_x, player.start_y);
         await player.socketSend('move', `${player.start_x} ${player.start_y}`);

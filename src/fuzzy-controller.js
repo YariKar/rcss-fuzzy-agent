@@ -22,6 +22,9 @@ class FuzzyController {
             },
             gatePossibility: {
                 free: 0, partly: 0, block: 0
+            },
+            ballHald: {
+                free: 0, risk: 0, block: 0
             }
         };
 
@@ -154,6 +157,14 @@ class FuzzyController {
 
     }
 
+    ballHaldMF(taken){
+        if (taken.kick){
+            return {free: 0, risk: 0, block: 1}
+        }
+        return {free: 0, risk: 0, block: 0}
+
+    }
+
     calculateKnowMatchFunctionValues(taken) {
         this.variables.ballKnowledge = this.ballKnowledgeMF(taken)
         this.variables.posKnowledge = this.posKnowledgeMF(taken)
@@ -198,12 +209,19 @@ class FuzzyController {
             return actions.positioning(taken)
         }
         this.variables.gatePossibility = this.gatePossibilityMF(taken)
+        this.variables.ballHald = this.ballHaldMF(taken)
         console.log("GATE POS:", this.variables.gatePossibility)
         if (this.variables.ballDistance.close >= 0.7) {
             if (this.variables.gatePossibility.free >= 0.5) {
                 console.log("GATE FREE: shoot", this.variables.gatePossibility, taken.state.pos)
                 return actions.shoot(taken)
             }
+
+            if(this.variables.ballHald.block>=0.7){
+                console.log("BALL HALD BLOCK: pass", this.variables.ballHald, taken.last_seen_teammate)
+                return actions.pass(taken)
+            }
+
             if (this.variables.gatePossibility.partly>=0.6){
                 console.log("GATE PARTLY: dribble", this.variables.gatePossibility, taken.state.pos)
                 return actions.dribbling(taken)

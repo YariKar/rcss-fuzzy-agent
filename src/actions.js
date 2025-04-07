@@ -25,10 +25,6 @@ module.exports = {
         return { n: "turn", v: 45 };
     },
 
-    takeBall(taken) {
-
-    },
-
     moveToBall(taken) {
         const angleDiff = taken.state.ball?.angle
         const ballDist = taken.state.ball?.dist
@@ -37,7 +33,7 @@ module.exports = {
         if (Math.abs(angleDiff) > TURN_THRESHOLD) {
             return { n: "turn", v: angleDiff }
         }
-        if (taken.state?.pos?.y < -45 || taken.state?.pos.y > 45) {
+        if (taken.state?.pos?.y < -45 || taken.state?.pos?.y > 45) {
             return { n: "dash", v: 50 };
         }
         if (ballDist < 2) {
@@ -67,9 +63,10 @@ module.exports = {
 
         // 3. Определяем границы ворот
         const yCoords = visibleFlags.map(flag => flag.y).sort((a, b) => a - b);
-        const minY = yCoords[0];
-        const maxY = yCoords[yCoords.length - 1];
-
+        
+        const minY = yCoords[0] + 1;
+        const maxY = yCoords[yCoords.length - 1] - 1;
+        console.log("RANDOM", minY, maxY)
         // 4. Генерируем случайную цель между флагами
         const targetY = minY + Math.random() * (maxY - minY);
         const target = {
@@ -150,6 +147,64 @@ module.exports = {
         }
 
         return { n: "kick", v: `5 ${turnAngle}` };
+    },
+
+    pass(taken){
+        const teammate = taken.last_seen_teammate;
+    
+        // 1. Если данные о партнере отсутствуют или недостаточны
+        // if (!teammate || (!teammate.x && !teammate.angle)) {
+        //     return { n: "kick", v: "40 0" }; // Пасс вперёд по умолчанию
+        // }
+    
+        // 2. Расчет целевых координат
+        let targetX, targetY, kickAngle;
+        
+        // Сценарий A: Есть точные координаты
+        if (teammate.x !== null && teammate.y !== null) {
+            targetX = teammate.x;
+            targetY = teammate.y;
+            kickAngle = calculations.calculateAngle(taken.state.pos, {x: targetX, y: targetY});
+        }
+        // Сценарий B: Есть расстояние и угол
+        else if (teammate.dist !== null && teammate.angle !== null) {
+            kickAngle = teammate.angle;
+            targetX = taken.state.pos.x + teammate.dist * Math.cos(kickAngle * Math.PI / 180);
+            targetY = taken.state.pos.y + teammate.dist * Math.sin(kickAngle * Math.PI / 180);
+        }
+        // Сценарий C: Только расстояние
+        else if (teammate.dist !== null) {
+            kickAngle = 0; // По умолчанию вперед
+            targetX = taken.state.pos.x + teammate.dist;
+            targetY = taken.state.pos.y;
+        }
+    
+        // 3. Расчет силы удара
+        const currentBallDist = taken.state.ball.dist || calculations.distance(taken.state.pos, taken.state.ball);
+        const targetDist = calculations.distance(taken.state.pos, {x: targetX, y: targetY});
+        
+        // Формула силы: базовое значение + коррекция на расстояние
+        let kickPower = Math.min(100, 
+            30 + // Базовое усилие
+            (targetDist) + // Основная компонента расстояния
+            (currentBallDist * 0.6) // Коррекция на текущую дистанцию до мяча
+        );
+        console.log("PASS", kickPower, targetDist, currentBallDist, taken.state.pos, taken.state.ball, targetX, targetY, teammate)
+        // 4. Коррекция угла для точности
+        const ANGLE_CORRECTION = 2.5; // Коэффициент точности
+        const precision = Math.max(0.5, 1 - (targetDist / 100)); 
+        kickAngle += (Math.random() - 0.5) * ANGLE_CORRECTION * (1 - precision);
+    
+        return {
+            n: "kick",
+            v: `${Math.round(kickPower)} ${kickAngle.toFixed(1)}`
+        };
+    },
+
+    knock(taken){
+
     }
+
+
 
 }
