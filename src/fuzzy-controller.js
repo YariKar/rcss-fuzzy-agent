@@ -157,11 +157,22 @@ class FuzzyController {
 
     }
 
-    ballHaldMF(taken){
-        if (taken.kick){
-            return {free: 0, risk: 0, block: 1}
+    ballHaldMF(taken) {
+        if (taken.kick) {
+            return { free: 0, risk: 0, block: 1 }
         }
-        return {free: 0, risk: 0, block: 0}
+
+        const enemies = taken.state.enemyTeam || [];
+        
+        // 1. Считаем количество соперников в радиусе 1м от мяча
+        const nearEnemiesCount = enemies.filter(e => calculations.distance(e, taken.state.ball) || e.dist <= 1.0).length;
+        console.log("BALL HALD mf:", enemies, enemies.filter(e => e.dist <= 1.0), nearEnemiesCount)
+        // 2. Функции принадлежности для каждого терма
+        return {
+            free: calculations.trapezoidMF(nearEnemiesCount, [-1, -0.5, 0.5, 1.0]),
+            risk: calculations.trapezoidMF(nearEnemiesCount, [0.5, 1.0, 2.0, 2.5]),
+            block: calculations.trapezoidMF(nearEnemiesCount, [2.0, 2.5, 11, 11])
+        };
 
     }
 
@@ -202,7 +213,7 @@ class FuzzyController {
             //     console.log("BALL NEAR, FARTHER: positioning")
             //     
             // }
-            if (this.variables.teamPositioning.closer>=0.6){
+            if (this.variables.teamPositioning.closer >= 0.6) {
                 console.log("BALL NEAR: move", this.variables.ballDistance)
                 return actions.moveToBall(taken)
             }
@@ -216,20 +227,28 @@ class FuzzyController {
                 console.log("GATE FREE: shoot", this.variables.gatePossibility, taken.state.pos)
                 return actions.shoot(taken)
             }
-
-            if(this.variables.ballHald.block>=0.7){
-                console.log("BALL HALD BLOCK: pass", this.variables.ballHald, taken.last_seen_teammate)
+            console.log("BALL HALD value:", this.variables.ballHald)
+            if (this.variables.ballHald.block >= 0.7) {
+                console.log("BALL HALD BLOCK: pass", this.variables.ballHald, taken.last_seen_teammate, taken.state.enemyTeam)
                 return actions.pass(taken)
             }
 
-            if (this.variables.gatePossibility.partly>=0.6){
-                console.log("GATE PARTLY: dribble", this.variables.gatePossibility, taken.state.pos)
-                return actions.dribbling(taken)
+            if (this.variables.ballHald.risk >= 0.5) {
+                console.log("BALL HALD risk: knock", this.variables.ballHald, taken.state.enemyTeam)
+                return actions.knock(taken)
             }
-            if (this.variables.gatePossibility.block>=0.7){
-                console.log("GATE BLOCK: turn ball", this.variables.gatePossibility, taken.state.pos)
-                return actions.ballTurn(taken)
+            if (this.variables.ballHald.free >= 0.5) {
+                console.log("BALL HALD free: leading", this.variables.ballHald)
+                if (this.variables.gatePossibility.partly >= 0.6) {
+                    console.log("GATE PARTLY: dribble", this.variables.gatePossibility, taken.state.pos)
+                    return actions.dribbling(taken)
+                }
+                if (this.variables.gatePossibility.block >= 0.7) {
+                    console.log("GATE BLOCK: turn ball", this.variables.gatePossibility, taken.state.pos)
+                    return actions.ballTurn(taken)
+                }
             }
+            
             //console.log("BALL CLOSE: kick", this.variables.ballDistance)
             //return { n: "kick", v: "100 " + (-taken.state.ball?.angle) }
         }

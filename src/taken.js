@@ -76,13 +76,13 @@ class Taken {
                 }
 
             }
-
+            console.log("PARSE PLAYERS:", obj_name)
             if (obj_name.includes("p") && !obj_name.includes("f")) {
                 let enemy = null;
-                if (this.team == "A") {
-                    enemy = "B";
+                if (this.team == "Puck") {
+                    enemy = "Goal"; //TODO
                 } else {
-                    enemy = "A";
+                    enemy = "Puck";
                 }
                 let elem = { "dist": obj['p'][0], "angle": obj['p'][1] };
 

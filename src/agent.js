@@ -314,6 +314,14 @@ class Agent {
                 this.run = true;
                 this.taken.kick = false;
             }
+            if (p[2].includes("kick_in") && p[2].includes(this.taken?.side)) {
+                console.log("KICK IN")
+                if (this.taken.state.ball?.dist < 1.5) {
+                    this.act =  { n: "kick", v: `30 180` };
+                    this.taken.resetState();
+                    return
+                }
+            }
         }
 
         if (cmd === "init"){

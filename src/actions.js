@@ -10,7 +10,7 @@ module.exports = {
         const top = taken.top
         if (y <= bottom && y >= top) {
             //TODO
-            return { n: "turn", v: 10 };
+            return { n: "turn", v: 30 };
         }
         let keys = Object.keys(taken.state.all_flags);
         for (const key of keys) {
@@ -202,7 +202,16 @@ module.exports = {
     },
 
     knock(taken){
-
+        const DECOY_ANGLE = 45; // Угол для обмана
+        const MAIN_ANGLE = -30; // Реальное направление
+        
+        return [
+            { n: "turn", v: DECOY_ANGLE }, // Финт
+            { n: "kick", v: "10 0" },       // Отвлекающий удар
+            { n: "turn", v: MAIN_ANGLE },  // Реальный поворот
+            { n: "dash", v: 100 },         // Рывок
+            { n: "kick", v: "20 " + MAIN_ANGLE }
+        ];
     }
 
 
