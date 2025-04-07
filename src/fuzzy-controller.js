@@ -140,15 +140,15 @@ class FuzzyController {
 
         // Функции принадлежности
         const partlyMF = calculations.trapezoidMF(goalDist, [15, 20, 105, 105]);
-        const freeMF = calculations.trapezoidMF(goalDist, [5, 10, 15, 20]);
+        const freeMF = calculations.trapezoidMF(goalDist, [0, 0, 19.1, 26]);
 
-        // Учет угла обзора ворот
-        const angleToGoal = Math.abs(calculations.calculateAngle(taken.state.pos, goalCenter));
-        const angleFactor = 1 - Math.min(angleToGoal / 45, 1); // 0-45 градусов
-        //console.log("ALL GATE POS", nearestFlag, goalCenter, goalDist, partlyMF, freeMF, angleToGoal, angleFactor)
+        // // Учет угла обзора ворот
+        // const angleToGoal = Math.abs(calculations.calculateAngle(taken.state.pos, goalCenter));
+        // const angleFactor = 1 - Math.min(angleToGoal / 45, 1); // 0-45 градусов
+        console.log("ALL GATE POS", nearestFlag, goalCenter, goalDist, partlyMF, freeMF)
         return {
-            free: Math.min(freeMF, angleFactor),
-            partly: Math.min(partlyMF, 1 - freeMF),
+            free: freeMF,
+            partly: partlyMF,
             block: 0
         };
 
@@ -187,12 +187,15 @@ class FuzzyController {
             return actions.positioning(taken)
         }
         if (this.variables.ballDistance.near >= 0.3) {
-            if (this.variables.teamPositioning.farther >= 0.5) {
-                console.log("BALL NEAR, FARTHER: positioning")
-                return actions.positioning(taken)
+            // if (this.variables.teamPositioning.farther >= 0.5) {
+            //     console.log("BALL NEAR, FARTHER: positioning")
+            //     
+            // }
+            if (this.variables.teamPositioning.closer>=0.6){
+                console.log("BALL NEAR: move", this.variables.ballDistance)
+                return actions.moveToBall(taken)
             }
-            console.log("BALL NEAR: move", this.variables.ballDistance)
-            return actions.moveToBall(taken)
+            return actions.positioning(taken)
         }
         this.variables.gatePossibility = this.gatePossibilityMF(taken)
         console.log("GATE POS:", this.variables.gatePossibility)
@@ -201,7 +204,7 @@ class FuzzyController {
                 console.log("GATE FREE: shoot", this.variables.gatePossibility, taken.state.pos)
                 return actions.shoot(taken)
             }
-            if (this.variables.gatePossibility.partly>=0.7){
+            if (this.variables.gatePossibility.partly>=0.6){
                 console.log("GATE PARTLY: dribble", this.variables.gatePossibility, taken.state.pos)
                 return actions.dribbling(taken)
             }
