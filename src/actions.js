@@ -212,7 +212,43 @@ module.exports = {
             { n: "dash", v: 100 },         // Рывок
             { n: "kick", v: "20 " + MAIN_ANGLE }
         ];
-    }
+    },
+
+    actionReturn(input){
+		if (!input.state.goal) return {n: "turn", v: 60};
+		if (Math.abs(input.state.goal.angle) > 10)
+			return {n: "turn", v: input.state.goal.angle};
+		if (input.state.goal.dist > 3)
+			return {n: "dash", v: input.state.goal.dist * 2 + 30}
+		input.action = "rotateCenter";
+		return {n: "turn", v: 180};
+	},
+	rotateCenter(input){
+		if (!input.state.all_flags["fc"]) return {n: "turn", v: 60};
+		input.action = "seekBall";
+		return {n: "turn", v: input.state.all_flags["fc"].angle};
+	},
+
+    seekBall(input){
+		if (input.state.all_flags[input.turnData]){
+
+			if (Math.abs(input.state.all_flags[input.turnData].angle) > 10)
+				return {n: "turn", v: input.state.all_flags[input.turnData].angle};
+			if (input.turnData == "ft0") input.turnData = "fb0";
+			else
+				if (input.turnData == "fb0"){
+					input.turnData = "ft0";
+					input.action = "rotateCenter";
+					return this.rotateCenter(input);
+				}
+		}
+		if (input.turnData == "ft0")
+			return {n: "turn", v: (input.side == "l") ? -20 : 20};
+		if (input.turnData == "fb0"){
+			return {n: "turn", v: (input.side == "l") ? 20 : -20};
+		}
+		//throw "Error"
+	}
 
 
 
