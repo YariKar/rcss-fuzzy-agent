@@ -186,19 +186,25 @@ class FuzzyControllerGoalie {
         // if (this.variables.ballDistance.near >= 0.3) {
         //     return actions.moveToBall(taken)
         // }
-        if(this.variables.ballDistance.close>=0.7){
-            console.log("GOALIE CLOSE", this.variables.ballHald)
-            //return [{n:"catch", v: "0"},{n: "kick", v: "100 0"}]
-            if(this.variables.ballHald.free>=0.5){5
-                console.log("GOALIE PASS")
-                return actions.pass(taken)
+        if(this.variables.ballDistance.near>=0.6){
+            if (this.variables.teamPositioning.closer>=0.7){
+                actions.moveToBall(taken)
             }
-            return {n: "kick", v: "100 0"}
+            actions.positioning(taken)
         }
-        if (this.variables.teamPositioning.closer>=0.7 && this.variables.enemyPositioning.closer>=0.7){
-            console.log("GOALIE MOVE TO BALL")
-            return actions.moveToBall(taken)
+        if(this.variables.ballDistance.close>=0.7){
+            return [{n:"catch", v: "0"},{n: "kick", v: "100 0"}]
+            // console.log("GOALIE CLOSE", this.variables.ballHald)
+            // if(this.variables.ballHald.free>=0.5){
+            //     console.log("GOALIE PASS")
+            //     return actions.pass(taken)
+            // }
+            // return {n: "kick", v: "100 0"}
         }
+        // if (this.variables.teamPositioning.closer>=0.7 && this.variables.enemyPositioning.closer>=0.7){
+        //     console.log("GOALIE MOVE TO BALL")
+        //     return actions.moveToBall(taken)
+        // }
 
 
     }
