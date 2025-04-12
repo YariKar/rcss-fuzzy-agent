@@ -4,7 +4,7 @@ const calculations = require("./calculations")
 
 module.exports = {
 
-    positioning(taken) {
+    positioning_old(taken) {
         const y = taken.state.pos?.y || taken.last_pos.pos.y
         const bottom = taken.bottom
         const top = taken.top
@@ -23,6 +23,138 @@ module.exports = {
             }
         }
         return { n: "turn", v: 45 };
+    },
+    positioning(taken) {
+        // Параметры поля (должны соответствовать серверу RCSS)
+        const FIELD = {
+            width: 105,
+            height: 68,
+            margin: 5, // Безопасная зона от краев
+            penaltyArea: {
+                width: 16.5,
+                depth: 40.3
+            }
+        };
+    
+        // Получаем последние известные позиции
+        const currentPos = taken.state.pos || taken.last_pos?.pos || { 
+            x: taken.start_x, 
+            y: Math.min(taken.top, Math.max(taken.bottom, taken.start_y))
+        };
+    
+        // Определяем границы безопасной зоны
+        const safeBoundary = {
+            minX: -FIELD.width/2 + FIELD.margin,
+            maxX: FIELD.width/2 - FIELD.margin,
+            minY: -FIELD.height/2 + FIELD.margin,
+            maxY: FIELD.height/2 - FIELD.margin
+        };
+    
+        // Функция для коррекции позиции в пределах поля
+        const clampPosition = (pos) => ({
+            x: Math.min(safeBoundary.maxX, Math.max(safeBoundary.minX, pos.x)),
+            y: Math.min(safeBoundary.maxY, Math.max(safeBoundary.minY, pos.y))
+        });
+    
+        // Базовые позиции с учетом границ
+        const strategicPositions = {
+            defender: clampPosition({
+                x: taken.side === "l" ? -FIELD.width/2 + 15 : FIELD.width/2 - 15,
+                y: currentPos.y * 0.5
+            }),
+            midfielder: clampPosition({
+                x: (taken.state.ball?.x || 0) * 0.7,
+                y: currentPos.y * 0.3
+            }),
+            attacker: clampPosition({
+                x: taken.side === "l" ? FIELD.width/4 : -FIELD.width/4,
+                y: 0
+            })
+        };
+    
+        // Выбор стратегии позиционирования
+        let targetPos;
+        if(taken.state.ball) {
+            const ballX = taken.state.ball.x;
+            const isDefense = (taken.side === "l" && ballX < -30) || 
+                             (taken.side === "r" && ballX > 30);
+            
+            targetPos = isDefense ? strategicPositions.defender : 
+                (Math.abs(ballX) < 30 ? strategicPositions.midfielder : 
+                                       strategicPositions.attacker);
+        } else {
+            targetPos = clampPosition({
+                x: taken.start_x,
+                y: taken.start_y
+            });
+        }
+    
+        // Коррекция конечной позиции
+        targetPos = clampPosition(targetPos);
+    
+        // Поиск безопасных флагов
+        const safeFlags = Object.values(taken.state.all_flags || {})
+            .filter(flag => {
+                const flagPos = utils.parseFlagPosition(flag.name);
+                return flagPos.x >= safeBoundary.minX && 
+                       flagPos.x <= safeBoundary.maxX &&
+                       flagPos.y >= safeBoundary.minY && 
+                       flagPos.y <= safeBoundary.maxY;
+            });
+    
+        // Если есть безопасные флаги - используем их
+        if(safeFlags.length > 0) {
+            const nearestSafeFlag = safeFlags.reduce((closest, flag) => 
+                flag.dist < closest.dist ? flag : closest, 
+                {dist: Infinity});
+    
+            if(nearestSafeFlag.dist > 3) {
+                return [
+                    {n: "turn", v: nearestSafeFlag.angle},
+                    {n: "dash", v: Math.min(70, nearestSafeFlag.dist * 1.5)}
+                ];
+            }
+        }
+    
+        // Расчет движения к целевой позиции
+        const angleToTarget = calculations.calculateAngle(currentPos, targetPos);
+        const distanceToTarget = calculations.distance(currentPos, targetPos);
+    
+        // Определяем граничные условия
+        const isNearBoundary = 
+            currentPos.x <= safeBoundary.minX + 3 || 
+            currentPos.x >= safeBoundary.maxX - 3 ||
+            currentPos.y <= safeBoundary.minY + 3 || 
+            currentPos.y >= safeBoundary.maxY - 3;
+    
+        // Если близко к границе - двигаемся к центру
+        if(isNearBoundary) {
+            const centerPos = clampPosition({
+                x: 0,
+                y: currentPos.y > 0 ? -10 : 10
+            });
+            const angleToCenter = calculations.calculateAngle(currentPos, centerPos);
+            return [
+                {n: "turn", v: angleToCenter},
+                {n: "dash", v: 80}
+            ];
+        }
+    
+        // Формируем действия
+        const actions = [];
+        if(Math.abs(angleToTarget) > 15) {
+            actions.push({n: "turn", v: angleToTarget});
+        }
+        
+        if(distanceToTarget > 2) {
+            const dashPower = Math.min(
+                100, 
+                distanceToTarget * 2 + 30 - (isNearBoundary ? 50 : 0)
+            );
+            actions.push({n: "dash", v: dashPower});
+        }
+    
+        return actions.length > 0 ? actions : {n: "turn", v: 0};
     },
 
     moveToBall(taken) {
@@ -186,7 +318,7 @@ module.exports = {
         // Формула силы: базовое значение + коррекция на расстояние
         let kickPower = Math.min(100, 
             30 + // Базовое усилие
-            (targetDist) + // Основная компонента расстояния
+            (targetDist*0.6) + // Основная компонента расстояния
             (currentBallDist * 0.6) // Коррекция на текущую дистанцию до мяча
         );
         console.log("PASS", kickPower, targetDist, currentBallDist, taken.state.pos, taken.state.ball, targetX, targetY, teammate)
@@ -200,6 +332,40 @@ module.exports = {
             v: `${Math.round(kickPower)} ${kickAngle.toFixed(1)}`
         };
     },
+    // pass(taken) {
+    //     const teammate = taken.last_seen_teammate;
+    //     const prevPos = teammate.prevPos || teammate;
+    //     const speed = {
+    //         x: teammate.x - prevPos.x,
+    //         y: teammate.y - prevPos.y
+    //     };
+    
+    //     // Прогнозируем позицию через 0.5 сек
+    //     const predictCoeff = 0.5;
+    //     const target = {
+    //         x: teammate.x + speed.x * predictCoeff,
+    //         y: teammate.y + speed.y * predictCoeff
+    //     };
+    
+    //     const currentBallDist = calculations.distance(taken.state.pos, taken.state.ball);
+    //     const targetDist = calculations.distance(taken.state.pos, target);
+        
+    //     // Расчет силы удара с запасом 15%
+    //     const kickPower = Math.min(
+    //         100, 
+    //         (targetDist * 1.15) + (currentBallDist * 0.8)
+    //     );
+    
+    //     // Точность на основе расстояния
+    //     const anglePrecision = Math.max(1 - targetDist/50, 0.2);
+    //     const aimAngle = calculations.calculateAngle(taken.state.pos, target);
+    //     const precisionAngle = aimAngle + (Math.random() - 0.5) * 5 * (1 - anglePrecision);
+    
+    //     return {
+    //         n: "kick",
+    //         v: `${Math.round(kickPower)} ${precisionAngle.toFixed(1)}`
+    //     };
+    // },
 
     knock(taken){
         const DECOY_ANGLE = 45; // Угол для обмана

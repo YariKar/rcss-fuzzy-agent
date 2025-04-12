@@ -485,6 +485,11 @@ module.exports = {
         }
     },
 
+
+    parseFlagPosition(flagName) {
+        return {x: Flags[flagName]?.x, y: Flags[flagName]?.y};
+    },
+
 }
 
 

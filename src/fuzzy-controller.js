@@ -85,10 +85,17 @@ class FuzzyController {
 
     teamPositioningMF(taken) {
         console.log("TEAM POS", taken.state.myTeam)
-        const CLOSER_MAX = 1
-        const EQUAL_MIN = 1
-        const EQUAL_MAX = 3
-        const FARTHER_MIN = 3
+        let CLOSER_MAX = 1
+        let EQUAL_MIN = 1
+        let EQUAL_MAX = 3
+        let FARTHER_MIN = 3
+        if ((taken.side === "l" && taken.state.ball?.x < -30) || (taken.side === "r" && taken.state.ball?.x > 30)) {
+            CLOSER_MAX = 3
+            EQUAL_MIN = 3
+            EQUAL_MAX = 6
+            FARTHER_MIN = 6
+        }
+
         const selfDist = taken.state.ball.dist || calculations.distance(taken.state.pos, taken.state.ball);
         let closerCount = 0;
         taken.state?.myTeam.forEach(teammate => {
@@ -163,7 +170,7 @@ class FuzzyController {
         }
 
         const enemies = taken.state.enemyTeam || [];
-        
+
         // 1. Считаем количество соперников в радиусе 1м от мяча
         const nearEnemiesCount = enemies.filter(e => calculations.distance(e, taken.state.ball) || e.dist <= 1.0).length;
         console.log("BALL HALD mf:", enemies, enemies.filter(e => e.dist <= 1.0), nearEnemiesCount)
@@ -248,7 +255,7 @@ class FuzzyController {
                     return actions.ballTurn(taken)
                 }
             }
-            
+
             //console.log("BALL CLOSE: kick", this.variables.ballDistance)
             //return { n: "kick", v: "100 " + (-taken.state.ball?.angle) }
         }

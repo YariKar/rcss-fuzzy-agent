@@ -161,14 +161,14 @@ class FuzzyControllerGoalie {
         if (this.variables.ballKnowledge.unknown >= 0.8 || this.variables.posKnowledge.unknown >= 0.8) {
             //this.lastAction = this.positioningAction(taken);
             console.log("UNKNOWN", this.variables.ballKnowledge, this.variables.posKnowledge);
-            return actions.positioning(taken)
+            return actions.positioning_old(taken)
         }
         if (this.variables.ballKnowledge.assumed >= 0.3 || this.variables.ballKnowledge.assumed >= 0.3) {
             if (taken.last_act) {
                 console.log("ASSUMED", this.variables.ballKnowledge, this.variables.posKnowledge);
                 return taken.last_act;
             }
-            return actions.positioning(taken)
+            return actions.positioning_old(taken)
         }
 
         this.variables.ballDistance = this.ballDistanceMF(taken)
@@ -192,7 +192,7 @@ class FuzzyControllerGoalie {
                     taken.cmd = actions.seekBall(taken);
                     return taken.cmd
             }
-            return actions.positioning(taken)
+            return actions.positioning_old(taken)
         }
         // if (this.variables.ballDistance.near >= 0.3) {
         //     return actions.moveToBall(taken)
@@ -212,7 +212,7 @@ class FuzzyControllerGoalie {
                     taken.cmd = actions.seekBall(taken);
                     return taken.cmd
             }
-            actions.positioning(taken)
+            actions.positioning_old(taken)
         }
         if(this.variables.ballDistance.close>=0.7){
             return {n: "kick", v: "100 0"}
