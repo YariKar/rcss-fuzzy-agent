@@ -1,6 +1,6 @@
 from config import Flags, numPeople
 from getCoords import *
-from saveModule import posPlayer, otherPlayer
+from saveModule import posPlayer, otherPlayer, infoForTick, storeAgent
 
 def readFile(resFlags, resMov):
     for item in teams:
@@ -42,22 +42,22 @@ def createMapViewMove(resMoveP, resMoveB, resMovTeam):
     return {'resMoveP': resMoveP, 'resMoveB': resMoveB}
 
 class paramsForCalcPosition:
-    def __init__(self, elems, nowPlObj, angleOrientation, valueLackFlag, varianceArray, angleFlag, absoluteX, absoluteY):
+    def __init__(self, elems, now_pl_obj: storeAgent, angle_orientation, value_lack_flag, variance_array, angle_flag,
+                 absolute_x, absolute_y):
         self.elems = elems
-        self.nowPlObj = nowPlObj
-        self.angleOrientation = angleOrientation
-        self.valueLackFlag = valueLackFlag
-        self.varianceArray = varianceArray
-        self.angleFlag = angleFlag
-        self.absoluteX = absoluteX
-        self.absoluteY = absoluteY
+        self.nowPlObj = now_pl_obj
+        self.angleOrientation = angle_orientation
+        self.valueLackFlag = value_lack_flag
+        self.varianceArray = variance_array
+        self.angleFlag = angle_flag
+        self.absoluteX = absolute_x
+        self.absoluteY = absolute_y
         self.averageX = 0
         self.averageY = 0
         self.arrPlayer = []
         self.radian = None
         self.speedX = None
         self.speedY = None
-
     def __str__(self):
         return f"""paramsForCalcPosition:
     - Основные параметры:

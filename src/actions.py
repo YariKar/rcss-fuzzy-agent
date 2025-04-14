@@ -6,4 +6,4 @@ class Actions(Enum):
     PASSING = "passing",
     DRIBBLING = "dribbling",
     FIGHT = "fight",
-    SHOOT = "shoot"  # TODO check correct name
+    KICKING = "kicking"
