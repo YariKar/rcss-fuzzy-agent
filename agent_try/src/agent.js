@@ -1,13 +1,12 @@
 const Msg = require('./msg');
 const utils = require("./utils");
 const Flags = require('./flags');
-const TManager = require('./timeMacineManager');
 const Taken = require("./taken");
-
+const FuzzyController = require('./fuzzy-controller');
 
 class Agent {
-    constructor(teamName, goalkeeper) {
-        this.position = 'l'; // По умолчанию - левая половина поля
+    constructor(teamName, goalkeeper, number = -1) {
+        this.position = null
         this.run = true; // Игра начата
         this.act = null; // Действия
         this.rotationSpeed = null; // скорость вращения
@@ -26,17 +25,21 @@ class Agent {
         this.prevTact = null;
         this.playerName = "";
         this.state = {'time': 0}; // текущее состояние игрока
-        this.TManager = TManager;
         this.taken = new Taken();
         this.taken.team = teamName;
         this.ta = null;
         this.controllers = null;
 
+        
+        this.start_x = null;
+        this.start_y = null
 
         this.bottom = null;
         this.top = null;
         this.center = null;
         this.direction = null;
+        this.fuzzySystem = null
+        this.number = number
 
     }
 
@@ -281,25 +284,9 @@ class Agent {
         this.state['directionOfSpeed'] = data[3]['p'][1];
     }
 
-    oldVers(msg, cmd, p){
-        if (cmd === "hear"){
-            if (p[2] === "play_on"){
-                this.run = true;
-            }
-        }
-
-        if (!this.run){
-            return;
-        }
-        if (cmd === "see"){
-            this.act = this.manager.getAction(this.dt, p, cmd);    
-        }
-        
-    }
-
     analyzeEnv(msg, cmd, p) {
         if (cmd == "hear"){
-            console.log(p);
+            //console.log("P", p);
             if (p[2].includes("kick") && p[2] != "before_kick_off"){
                 if (!p[2].includes(this.taken.side)){
                     this.run = false;
@@ -309,60 +296,72 @@ class Agent {
                     this.taken.kick = true;
                 }
             }
+            if (p[2].includes("free_kick")) {
+                // setTimeout(() => {
+                //     const angle = this.fuzzySystem.calculateSafeDirection(this.state);
+                //     this.socketSend("kick", `100 ${angle}`);
+                // }, 500);
+            }
             if (p[2].includes("goal") || p[2] === "before_kick_off"){
                 this.act = {n: "move", v: this.start_x + " " + this.start_y}
                 this.taken.action = "return";
                 this.taken.turnData = "ft0";
+                console.log("GOAL", this.start_x, this.start_y, this.position, this.goalie)
                 return;
-                //'move', `${player.start_x} ${player.start_y}`
             }
 
             if (p[2].includes("play")){
                 this.run = true;
                 this.taken.kick = false;
             }
+            if (p[2].includes("kick_in") && p[2].includes(this.taken?.side)) {
+                console.log("KICK IN")
+                if (this.taken.state.ball?.dist < 1.5) {
+                    this.act =  { n: "kick", v: `30 180` };
+                    this.taken.resetState();
+                    return
+                }
+            }
         }
 
         if (cmd === "init"){
-            this.taken.side = p[0];           
-        }
-
-        if (this.manager){
-            this.oldVers(msg, cmd, p);    
-            return;
+            console.log("SET TAKEN SIDE",this.teamName, this.goalie, p[0])
+            this.taken.side = p[0]; 
+            this.position = p[0]          
         }
 
         if (cmd === "sense_body"){
-            //console.log(p);
-            //console.log("Direction!!!!", p[3]['p'][1], p[0]);
             this.direction = p[3]['p'][1];
         }  
 
         if (cmd === "see"){
+
             if (this.next_act){
-                this.act = this.next_act;
-                //console.log("ACT: ", this.act, p[0]);
-                this.next_act = null;
+                this.act = this.next_act[0];
+                if (this.next_act.length > 1){
+                    this.next_act = this.next_act.slice(1);
+                } else{
+                    this.next_act = null
+                }
                 return;
             }
 
-            //console.log(this.taken.state['ball']);
             this.taken.state['time'] = p[0];
             this.taken.set(p);
-
-            if (this.controllers){
-                this.act = this.controllers[0].execute(this.taken, this.controllers, this.bottom, this.top, this.direction, this.center);
-                //console.log(this.act);
+            if (this.fuzzySystem){
+                console.log("BEFORE ACTION", this)
+                this.act = this.fuzzySystem.execute(this.taken)
+                console.log("ACTION", this.number, this.taken.side, this.act)
+                if (this.act!=null){
+                    this.taken.last_act = this.act
+                }
                 if (Array.isArray(this.act)){
-                    this.next_act = this.act[1];
+                    this.next_act = this.act.slice(1);
                     this.act = this.act[0];
-                    
-                    //console.log("act", this.act);
-                    //console.log("next_act", this.next_act);
                 } 
-                //console.log("ACT: ", this.act, p[0]);
-            } else {
-                this.act = this.TManager.getAction(this.taken, this.ta);
+            }
+            else{
+                console.log("NO FUZZY DECISION SYSTEM! for", this.number, this.taken.side)
             }
 
             // Вызов автомата
