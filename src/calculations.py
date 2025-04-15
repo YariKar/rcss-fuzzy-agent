@@ -36,11 +36,11 @@ class Calculations:
 
     @staticmethod
     def distance(a, b):
-        return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+        return math.sqrt((a["x"] - b["x"]) ** 2 + (a["y"] - b["y"]) ** 2)
 
     @staticmethod
     def calculate_angle(fr, to):
-        return math.atan2(to.y - fr.y, to.x - fr.x) * 180 / math.pi
+        return math.atan2(to["y"] - fr["y"], to["x"] - fr["x"]) * 180 / math.pi
 
     @staticmethod
     def normalize_angle(angle):

@@ -1,12 +1,14 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log, ans_log
+from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log,\
+    ans_log, fuzzy_log
 from getCoords import *
 from saveModule import infoForTick, storeAgent
 from random import randint
 from statistic import createDataForPlt, addDataForStatDist, paramsCreateStats
 from processInputData import readFile, createMapViewFlag, createMapViewMove, \
     calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal
+from fuzzyAnalysisSystem import FuzzyAnalysisSystem
 
 resFlagsTeam = {}
 resMovTeam = {}
@@ -59,6 +61,8 @@ dataViewMap = createMapViewMove(resMovePTeam, resMoveBTeam, resMovTeam)
 resMovePTeam = dataViewMap['resMoveP']
 resMoveBTeam = dataViewMap['resMoveB']
 
+fuzzySystem = FuzzyAnalysisSystem()
+
 for item in teams:
     print('team - ', item)
     playerList[item] = {}
@@ -98,10 +102,11 @@ for item in teams:
             paramsTick = paramsForCalcPosition(elems, nowPlObj, angleOrientation,
                                                valueLackFlag, varianceArray, angleFlag, absoluteX, absoluteY)
             ansInfoForTick = calcInfoForTick(paramsTick, resMovePTeam, item, ind, absoluteCoordArray)
-            print("ans info for tick - ", str(ansInfoForTick))
+            #print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
             if (ansInfoForTick == None):
                 continue
+            fuzzySystem.execute(ansInfoForTick)
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX
@@ -134,7 +139,7 @@ for item in teams:
             new_row = {'time': elems['time'], 'player': nowPlayer, 'calc x': round(averageX, 4),
                        'calc y': round(averageY, 4), 'absolute x': absoluteX, 'absolute y': absoluteY,
                        'differenceX': round(differenceX, 4), 'differenceY': round(differenceY, 4)}
-            print("new row - ", new_row)
+            #print("new row - ", new_row)
             row_log.write(str(new_row)+"\n")
             # resultDF = resultDF._append(new_row, ignore_index=True)
 # print("result df - ", resultDF)
@@ -143,6 +148,7 @@ time_log.close()
 result_log.close()
 ans_log.close()
 row_log.close()
+fuzzy_log.close()
 # # Statistic
 # print('Start statistic')
 # valueCreateStats = paramsCreateStats(predictObj, resultPredictMoreFiveBallDF, resultPredictFromTwoToFiveBallDF, resultPredictLessTwoBallDF,

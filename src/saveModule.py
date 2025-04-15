@@ -148,14 +148,22 @@ class storeAgent:
             self.removePlayer[pred['name']].append(posPlayer(pred['x'], pred['y'], pred['angle']))
 
     def __str__(self):
+        # Форматирование storeCoord
         store_coord_content = "\n".join(
             [f"    [{i}] {item}" for i, item in enumerate(self.storeCoord)]
         )
-        remove_player_content = "\n".join(
-            [f"    {k}: {v}" for k, v in self.removePlayer.items()]
-        )
+
+        # Форматирование removePlayer с вложенными PosPlayer
+        remove_player_content = []
+        for k, v in self.removePlayer.items():
+            players_list = "\n".join(
+                [f"      • {str(player)}" for player in v]
+            )
+            remove_player_content.append(f"    {k} [count: {len(v)}]:\n{players_list}")
+
         return (
-            f"storeAgent:\n"
-            f"  storeCoord ({len(self.storeCoord)}):\n{store_coord_content}\n"
-            f"  removePlayer ({len(self.removePlayer)}):\n{remove_player_content}"
+                f"storeAgent:\n"
+                f"  storeCoord ({len(self.storeCoord)}):\n{store_coord_content}\n"
+                f"  removePlayer ({len(self.removePlayer)}):\n" +
+                "\n".join(remove_player_content)
         )
