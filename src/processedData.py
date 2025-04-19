@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log,\
-    ans_log, fuzzy_log
+    ans_log, fuzzy_log, sides
 from getCoords import *
 from saveModule import infoForTick, storeAgent
 from random import randint
@@ -102,6 +102,11 @@ for item in teams:
             paramsTick = paramsForCalcPosition(elems, nowPlObj, angleOrientation,
                                                valueLackFlag, varianceArray, angleFlag, absoluteX, absoluteY)
             ansInfoForTick = calcInfoForTick(paramsTick, resMovePTeam, item, ind, absoluteCoordArray)
+            ansInfoForTick.time = elems["time"]
+            if (elems["time"]<3000):
+                ansInfoForTick.side = sides[ansInfoForTick.team][0]
+            else:
+                ansInfoForTick.side = sides[ansInfoForTick.team][1]
             #print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
             if (ansInfoForTick == None):

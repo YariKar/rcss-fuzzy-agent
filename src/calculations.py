@@ -49,3 +49,15 @@ class Calculations:
         while angle < -180:
             angle += 360
         return angle
+
+    @staticmethod
+    def radian(angle):
+        return math.radians(angle)
+
+    @staticmethod
+    def cos(angle):
+        return math.cos(angle)
+
+    @staticmethod
+    def sin(angle):
+        return math.sin(angle)

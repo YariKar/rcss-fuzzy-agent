@@ -93,23 +93,146 @@ class FuzzyAnalysisSystem:
             'far': Calculations.trapezoid_mf(ball_dist, [NEAR_MAX, NEAR_MIN, 100, 100])
         }
 
-    def __team_positioning_mf(self, tick_data: paramsForCalcPosition):
-        pass
+    def __team_positioning_mf(self, tick_data):
+
+        # Находим мяч среди объектов
+        ball = None
+        for key in tick_data.arrPlayer.mapPlayer:
+            if key == 'b dist':
+                ball = tick_data.arrPlayer.mapPlayer[key]
+                break
+        if not ball:
+            return {"closer": 0.0, "equal": 0.0, "farther": 0.0}
+
+        # Позиции текущего игрока и мяча
+        current_player_pos = {"x": float(tick_data.absoluteX), "y": float(tick_data.absoluteY)}
+        ball_pos = {"x": float(ball.x), "y": float(ball.y)}
+        self_dist = Calculations.distance(current_player_pos, ball_pos)
+
+        # Собираем игроков своей команды (исключая текущего игрока)
+        teammates = []
+        team_prefix = f'p "{tick_data.team}"'
+        for key, player in tick_data.arrPlayer.mapPlayer.items():
+            if key.startswith(team_prefix):
+                teammates.append({"x": float(player.x), "y": float(player.y)})
+
+        # Считаем количество игроков ближе к мячу
+        closer_count = 0
+        for teammate_pos in teammates:
+            if Calculations.distance(teammate_pos, ball_pos) < self_dist:
+                closer_count += 1
+
+        # Определяем параметры зон
+        CLOSER_MAX = 1
+        EQUAL_MIN = 1
+        EQUAL_MAX = 3
+        FARTHER_MIN = 3
+
+        # Определяем сторону и положение мяча
+        side = 'l' if tick_data.absoluteX < 0 else 'r'
+        ball_x = ball_pos["x"]
+
+        if (side == 'l' and ball_x < -30) or (side == 'r' and ball_x > 30):
+            CLOSER_MAX = 3
+            EQUAL_MIN = 3
+            EQUAL_MAX = 6
+            FARTHER_MIN = 6
+        return {
+            "closer": Calculations.trapezoid_mf(closer_count, [-1, -1, 0, CLOSER_MAX]),
+            "equal": Calculations.trapezoid_mf(closer_count, [EQUAL_MIN - 1, EQUAL_MIN, EQUAL_MAX, EQUAL_MAX + 1]),
+            "farther": Calculations.trapezoid_mf(closer_count, [FARTHER_MIN - 1, FARTHER_MIN, 11, 11])
+        }
 
     def __gate_possibility_mf(self, tick_data: paramsForCalcPosition):
-        pass
+        # Определение стороны из данных
+        side = tick_data.side
+
+        # Целевые флаги для атаки
+        target_flags = {
+            'l': ['f g r t dist', 'f g r b dist', 'f g r c dist'],
+            'r': ['f g l t dist', 'f g l b dist', 'f g l c dist']
+        }[side]
+
+        # Сбор видимых флагов ворот
+        visible_flags = []
+        for flag in tick_data.elems.get('flags', []):
+            flag_type = flag['column']
+            if flag_type in target_flags:
+                # Конвертация полярных координат в декартовы
+                angle_rad = Calculations.radian(float(flag['angle']))
+                dist = float(flag['dist'])
+
+                # Позиция флага относительно игрока
+                rel_x = dist * Calculations.cos(angle_rad)
+                rel_y = dist * Calculations.sin(angle_rad)
+
+                # Абсолютные координаты флага
+                abs_flag_x = tick_data.absoluteX + rel_x
+                abs_flag_y = tick_data.absoluteY + rel_y
+                visible_flags.append((abs_flag_x, abs_flag_y))
+
+        # Если флаги не видны
+        if not visible_flags:
+            return {"free": 0.0, "partly": 0.0, "block": 1.0}
+
+        # Координаты центра ворот противника
+        goal_center = {"x": 52.5, "y": 0} if side == 'l' else {"x": -52.5, "y": 0}
+
+        # Позиция игрока в формате словаря
+        player_pos = {"x": tick_data.absoluteX, "y": tick_data.absoluteY}
+
+        # Расстояние до ворот с использованием метода класса
+        goal_dist = Calculations.distance(player_pos, goal_center)
+
+        # Расчет функций принадлежности
+        return {
+            "free": Calculations.trapezoid_mf(goal_dist, [0, 0, 19.1, 26]),
+            "partly": Calculations.trapezoid_mf(goal_dist, [15, 20, 105, 105]),
+            "block": 0.0
+        }
 
     def __ball_hold_mf(self, tick_data: paramsForCalcPosition):
-        pass
+        # Находим мяч среди объектов
+        ball = None
+        for key in tick_data.arrPlayer.mapPlayer:
+            if key == 'b dist':
+                ball = tick_data.arrPlayer.mapPlayer[key]
+                break
+        if not ball:
+            return {"free": 0.0, "risk": 0.0, "block": 0.0}
+
+        # Позиция мяча
+        ball_pos = {"x": float(ball.x), "y": float(ball.y)}
+
+        # Собираем вражеских игроков (исключая свою команду)
+        enemies = []
+        enemy_team_prefix = 'p "'  # Общий префикс для игроков
+        for key, player in tick_data.arrPlayer.mapPlayer.items():
+            # Игроки других команд и не мяч
+            if key.startswith(enemy_team_prefix) and tick_data.team not in key:
+                enemies.append({"x": float(player.x), "y": float(player.y)})
+
+        # Считаем количество соперников в радиусе 1м от мяча
+        near_enemies_count = 0
+        for enemy_pos in enemies:
+            if Calculations.distance(enemy_pos, ball_pos) <= 4.0:
+                near_enemies_count += 1
+
+        # Трапециевидные функции принадлежности
+        return {
+            "free": Calculations.trapezoid_mf(near_enemies_count, [-1, -0.5, 0.5, 1.0]),
+            "risk": Calculations.trapezoid_mf(near_enemies_count, [0.5, 1.0, 2.0, 2.5]),
+            "block": Calculations.trapezoid_mf(near_enemies_count, [2.0, 2.5, 11, 11])
+        }
 
     def __calculate_mf(self, tick_data: paramsForCalcPosition):
         self.__variables["ball_knowledge"] = self.__ball_knowledge_mf(tick_data)
         self.__variables["pos_knowledge"] = self.__pos_knowledge_mf(tick_data)
         if self.__variables["ball_knowledge"]["known"] >= 0.7 and self.__variables["pos_knowledge"]["known"] >=0.7:
             self.__variables["ball_distance"] = self.__ball_distance_mf(tick_data)
-            self.__team_positioning_mf(tick_data)
-            self.__gate_possibility_mf(tick_data)
-            self.__ball_hold_mf(tick_data)
+            self.__variables["team_positioning"] = self.__team_positioning_mf(tick_data)
+            self.__variables["gate_possibility"] = self.__gate_possibility_mf(tick_data)
+            self.__variables["ball_hold"] = self.__ball_hold_mf(tick_data)
 
     def __rules_handler(self, tick_data: paramsForCalcPosition):
         pass

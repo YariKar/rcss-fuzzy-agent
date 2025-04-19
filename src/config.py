@@ -33,6 +33,7 @@ resultStatisticColumn = ['player', 'expectationX','expectationY', 'varianceX', '
 resultPredictColumn = ['timeNow', 'player','viewFrom', 'nowX', 'nowY', 'nowAbsoluneX', 'nowAbsoluneY', 'predictX', 'predictY', 'predictAbsoluneX', 'predictAbsoluneY', 'nowDiffX', 'nowDiffY', 'predictDiffX', 'predictDiffY','predictVarianceX','predictVarianceY','startPredictX','startPredictY']
 movementsTenTick = ['typeCoord', 'maxValue', 'maxValueX', 'maxValueY', 'midValue', 'midValueX', 'midValueY']
 teams = ['Gliders2016', 'HELIOS2016']
+sides = {"Gliders2016": ["l", "r"], "HELIOS2016": ["r", "l"]}
 pathDefault = r'E:\My_Programs\study\degree_bak\rcss-fuzzy-agent\example_csv\\'
 # pathDefault = 'C:\qualifyingWork\helios2017-vs-oxsy2017\\'
 prefixFiles = '20170904132709-Gliders2016_0-vs-HELIOS2016_0-'

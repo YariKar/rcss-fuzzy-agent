@@ -58,6 +58,9 @@ class paramsForCalcPosition:
         self.radian = None
         self.speedX = None
         self.speedY = None
+        self.team = None
+        self.time = None
+        self.side = None
     def __str__(self):
         return f"""paramsForCalcPosition:
     - Основные параметры:
@@ -66,6 +69,9 @@ class paramsForCalcPosition:
       angleOrientation: {self.angleOrientation}
       valueLackFlag: {self.valueLackFlag}
       angleFlag: {self.angleFlag}
+      team: {self.team}
+      time: {self.time}
+      side: {self.side}
 
     - Координаты:
       absolute: ({self.absoluteX}, {self.absoluteY})
@@ -145,7 +151,7 @@ def calcPosOtherPl(param, resMovePTeam, team, ind):
         arrPlayer.addNewViewPlayer(player['column'], positionP)
     return arrPlayer
 
-def calcInfoForTick(param, resMovePTeam, team, ind, absoluteCoordArray):
+def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absoluteCoordArray):
     if (len(param.elems['flags']) < 2):
         if (param.valueLackFlag > 3):
             print('rotate for find flag!')
@@ -164,7 +170,7 @@ def calcInfoForTick(param, resMovePTeam, team, ind, absoluteCoordArray):
         param.speedY = np.abs(firstCoordVal.y) - np.abs(secondCoordVal.y)
         param.radian = (param.angleOrientation if param.angleOrientation > 0 else 360 + param.angleOrientation) * np.pi / 180
         param.averageX = firstCoordVal.x + param.speedX * np.cos(param.radian)  # cos
-        param.averageY = firstCoordVal.y + param.speedY * np.sin(param.radian)  # sin
+        param.averageY = firstCoordVal.y + param.speedY * np.sin(param.radian)  #
         if (param.valueLackFlag > 3 or (np.abs(param.averageX) > 54 or np.abs(param.averageY) > 32)):
             print('rotate for find flag!')
             return None
@@ -247,6 +253,7 @@ def calcInfoForTick(param, resMovePTeam, team, ind, absoluteCoordArray):
             return None
         # calc other obj
         param.arrPlayer = calcPosOtherPl(param, resMovePTeam, team, ind)
+        param.team = team
         return param
 
 class paramsForDataTickWithPredictVal:
