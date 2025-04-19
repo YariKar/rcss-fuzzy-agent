@@ -111,7 +111,9 @@ for item in teams:
             ans_log.write(str(ansInfoForTick))
             if (ansInfoForTick == None):
                 continue
-            fuzzySystem.execute(ansInfoForTick)
+            action = fuzzySystem.execute(ansInfoForTick)
+            print('action: ', elems['time'], item, ind, action)
+            result_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action.value) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX

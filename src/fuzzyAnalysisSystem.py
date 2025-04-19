@@ -234,14 +234,57 @@ class FuzzyAnalysisSystem:
             self.__variables["gate_possibility"] = self.__gate_possibility_mf(tick_data)
             self.__variables["ball_hold"] = self.__ball_hold_mf(tick_data)
 
-    def __rules_handler(self, tick_data: paramsForCalcPosition):
-        pass
+    def __rules_handler(self) -> Actions:
+        # Проверка состояния знаний о мяче и позиции
+        if self.__variables.get('ball_knowledge', {}).get('unknown', 0) >= 0.8 or \
+                self.__variables.get('pos_knowledge', {}).get('unknown', 0) >= 0.8:
+            return Actions.SEARCHING
+
+        # Проверка предполагаемого состояния
+        if self.__variables.get('ball_knowledge', {}).get('assumed', 0) >= 0.3 or \
+                self.__variables.get('pos_knowledge', {}).get('assumed', 0) >= 0.3:
+            return self.last_action if hasattr(self, 'last_action') else Actions.SEARCHING
+
+        # Анализ дистанции до мяча
+        ball_distance = self.__variables.get('ball_distance', {})
+        team_positioning = self.__variables.get('team_positioning', {})
+
+        if ball_distance.get('far', 0) > 0.8:
+            return Actions.SEARCHING
+
+        if ball_distance.get('near', 0) >= 0.3:
+            if team_positioning.get('closer', 0) >= 0.6:
+                return Actions.FIGHT
+            return Actions.SEARCHING
+
+        # Анализ возможности удара и контроля мяча
+        gate_possibility = self.__variables.get('gate_possibility', {})
+        ball_hold = self.__variables.get('ball_hold', {})
+
+        if ball_distance.get('close', 0) >= 0.7:
+            if gate_possibility.get('free', 0) >= 0.5:
+                return Actions.KICKING
+
+            if ball_hold.get('block', 0) >= 0.7:
+                return Actions.PASSING
+
+            if ball_hold.get('risk', 0) >= 0.5:
+                return Actions.FIGHT
+
+            if ball_hold.get('free', 0) >= 0.5:
+                if gate_possibility.get('partly', 0) >= 0.6:
+                    return Actions.DRIBBLING
+                if gate_possibility.get('block', 0) >= 0.7:
+                    return Actions.SEARCHING  # Аналог ballTurn отсутствует в Enum
+
+        # Стандартное действие по умолчанию
+        return Actions.SEARCHING
 
     def execute(self, tick_data: paramsForCalcPosition):
         self.__reset_variables()
         self.__calculate_mf(tick_data)
         log = f"MATCH FUNCTIONS, {str(self.__variables)}"
-        print(log)
+        # print(log)
         fuzzy_log.write(log)
-        action = self.__rules_handler(tick_data)
+        return self.__rules_handler()
         pass
