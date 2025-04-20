@@ -7,7 +7,8 @@ from saveModule import infoForTick, storeAgent
 from random import randint
 from statistic import createDataForPlt, addDataForStatDist, paramsCreateStats
 from processInputData import readFile, createMapViewFlag, createMapViewMove, \
-    calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal
+    calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal,\
+    parse_groundtruth_file, ActionInfo
 from fuzzyAnalysisSystem import FuzzyAnalysisSystem
 
 resFlagsTeam = {}
@@ -63,6 +64,10 @@ resMoveBTeam = dataViewMap['resMoveB']
 
 fuzzySystem = FuzzyAnalysisSystem()
 
+server_results = parse_groundtruth_file()
+predicated_actions = {}
+print(server_results)
+
 for item in teams:
     print('team - ', item)
     playerList[item] = {}
@@ -81,7 +86,7 @@ for item in teams:
         for elems in resProcessTeam[item][(ind+1)]:
             if elems['time'] > 100: #TODO for debug
                 break
-            print('time - ', elems['time'], item, ind)
+            #print('time - ', elems['time'], item, ind)
             time_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind)+"\n")
 
 
@@ -112,7 +117,9 @@ for item in teams:
             if (ansInfoForTick == None):
                 continue
             action = fuzzySystem.execute(ansInfoForTick)
-            print('action: ', elems['time'], item, ind, action)
+            # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
+            key = f"{elems['time']}{ansInfoForTick.side.upper()}{ind}"
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind,ansInfoForTick.side, action.value)
             result_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action.value) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
@@ -151,6 +158,8 @@ for item in teams:
             # resultDF = resultDF._append(new_row, ignore_index=True)
 # print("result df - ", resultDF)
 # result_log.write(resultDF)
+print("ACTIONS FROM SERVER: ", server_results)
+print("PREDICATED ACTIONS", predicated_actions)
 time_log.close()
 result_log.close()
 ans_log.close()

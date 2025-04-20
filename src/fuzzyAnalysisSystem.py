@@ -82,7 +82,7 @@ class FuzzyAnalysisSystem:
         ball_pos = {"x": float(tick_data.arrPlayer.mapPlayer["b dist"].x), "y": float(tick_data.arrPlayer.mapPlayer["b dist"].y)}
         ball_dist = Calculations.distance(player_pos, ball_pos)
         log = f"BALL DIST, {player_pos}, {ball_pos}, {ball_dist}"
-        print(log)
+        # print(log)
         fuzzy_log.write(log)
         if not ball_dist:
             return {'close': 0.0, 'near': 0.0, 'far': 1.0}

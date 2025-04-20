@@ -45,3 +45,4 @@ row_log = open(log_path+"row.txt", "w")
 result_log = open(log_path+"result.txt", "w")
 ans_log = open(log_path+"ans.txt", "w")
 fuzzy_log = open(log_path + "fuzzy.txt", "w")
+server_actions_pattern = '-action-groundtruth-v3.csv'

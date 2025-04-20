@@ -1,19 +1,22 @@
-from config import Flags, numPeople
+from config import Flags, numPeople, server_actions_pattern
 from getCoords import *
 from saveModule import posPlayer, otherPlayer, infoForTick, storeAgent
+import ast
+
 
 def readFile(resFlags, resMov):
     for item in teams:
         resFlags[item] = []
         resMov[item] = []
         for index in range(numPeople):
-          print(index, pathDefault+prefixFiles+item+'_'+str((index+1))+'-landmarks.csv')
-          iter = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index+1)) + '-landmarks.csv', sep=',')
-          print(index, pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv')
-          iterMov = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv', sep=',')
-          resFlags[item].append(Remove_Null_or_NAN_Columns(iter))
-          resMov[item].append(Remove_Null_or_NAN_Columns(iterMov))
+            print(index, pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-landmarks.csv')
+            iter = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-landmarks.csv', sep=',')
+            print(index, pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv')
+            iterMov = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv', sep=',')
+            resFlags[item].append(Remove_Null_or_NAN_Columns(iter))
+            resMov[item].append(Remove_Null_or_NAN_Columns(iterMov))
     return {'resFlags': resFlags, 'resMov': resMov}
+
 
 def createMapViewFlag(resProcess, resFlagsTeam):
     for item in teams:
@@ -28,6 +31,7 @@ def createMapViewFlag(resProcess, resFlagsTeam):
                 })
     return resProcess
 
+
 def createMapViewMove(resMoveP, resMoveB, resMovTeam):
     for item in teams:
         resMoveP[item] = {}
@@ -40,6 +44,7 @@ def createMapViewMove(resMoveP, resMoveB, resMovTeam):
                 resMoveP[item][(ind + 1)][row['# time']] = player['plArr']
                 resMoveB[item][(ind + 1)][row['# time']] = player['ballArr']
     return {'resMoveP': resMoveP, 'resMoveB': resMoveB}
+
 
 class paramsForCalcPosition:
     def __init__(self, elems, now_pl_obj: storeAgent, angle_orientation, value_lack_flag, variance_array, angle_flag,
@@ -61,6 +66,7 @@ class paramsForCalcPosition:
         self.team = None
         self.time = None
         self.side = None
+
     def __str__(self):
         return f"""paramsForCalcPosition:
     - Основные параметры:
@@ -151,6 +157,7 @@ def calcPosOtherPl(param, resMovePTeam, team, ind):
         arrPlayer.addNewViewPlayer(player['column'], positionP)
     return arrPlayer
 
+
 def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absoluteCoordArray):
     if (len(param.elems['flags']) < 2):
         if (param.valueLackFlag > 3):
@@ -168,7 +175,8 @@ def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absol
             return None
         param.speedX = np.abs(firstCoordVal.x) - np.abs(secondCoordVal.x)
         param.speedY = np.abs(firstCoordVal.y) - np.abs(secondCoordVal.y)
-        param.radian = (param.angleOrientation if param.angleOrientation > 0 else 360 + param.angleOrientation) * np.pi / 180
+        param.radian = (
+                           param.angleOrientation if param.angleOrientation > 0 else 360 + param.angleOrientation) * np.pi / 180
         param.averageX = firstCoordVal.x + param.speedX * np.cos(param.radian)  # cos
         param.averageY = firstCoordVal.y + param.speedY * np.sin(param.radian)  #
         if (param.valueLackFlag > 3 or (np.abs(param.averageX) > 54 or np.abs(param.averageY) > 32)):
@@ -256,12 +264,14 @@ def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absol
         param.team = team
         return param
 
+
 class paramsForDataTickWithPredictVal:
     def __init__(self, listPredict, elems, predictObj, angleOrientation):
         self.listPredict = listPredict
         self.elems = elems
         self.predictObj = predictObj
         self.angleOrientation = angleOrientation
+
 
 def createDataTickWithPredictVal(param, nowPlayer):
     for predictVal in param.listPredict:
@@ -279,9 +289,11 @@ def createDataTickWithPredictVal(param, nowPlayer):
             team = name[(name.find('"') + 1):name.rfind('"')]
             teamNum = name[(name.rfind('"') + 2):len(name)]
             if (param.elems['time'] < 6000):
-                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'] + 1, param.angleOrientation, False)
+                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'] + 1, param.angleOrientation,
+                                                  False)
             else:
-                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'], param.angleOrientation, False)
+                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'], param.angleOrientation,
+                                                  False)
             absCoordNow = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'], param.angleOrientation, False)
         if (absCoord != None and absCoordNow != None):
             addObj = {
@@ -313,3 +325,73 @@ def createDataTickWithPredictVal(param, nowPlayer):
                 param.predictObj[name] = [addObj]
 
     return param.predictObj
+
+
+def parse_groundtruth_file():
+    # Функция для преобразования строк в списки
+    def parse_list(value):
+        if pd.isna(value) or value == '':
+            return []
+        try:
+            return ast.literal_eval(str(value))
+        except (ValueError, SyntaxError):
+            return []
+
+    # Загрузка CSV-файла с обработкой списков
+    df = pd.read_csv(
+        r'E:\My_Programs\study\degree_bak\rcss-fuzzy-agent\example_csv\Gliders2016-HELIOS2017-action-groundtruth-v3.csv',
+        converters={
+            'nearestPlayer': parse_list,
+            'middleDistPlayer': parse_list,
+            'passPair': parse_list
+        },
+        index_col=0  # Использовать первую колонку как индекс
+    )
+
+    # Преобразование DataFrame в список объектов
+    data_objects = [
+        GameEvent(
+            index=row.Index,
+            time=row.time,
+            action=row.action,
+            sideWithBall=row.sideWithBall,
+            lenOfNearest=row.lenOfNearest,
+            nearestPlayer=row.nearestPlayer,
+            lenOfMiddleDist=row.lenOfMiddleDist,
+            middleDistPlayer=row.middleDistPlayer,
+            passPair=row.passPair,
+            goalIsNearest=row.goalIsNearest
+        )
+        for row in df.reset_index().itertuples()
+    ]
+    return data_objects
+
+
+class GameEvent:
+    def __init__(self, index, time, action, sideWithBall, lenOfNearest, nearestPlayer,
+                 lenOfMiddleDist, middleDistPlayer, passPair, goalIsNearest):
+        self.index = index
+        self.time = time
+        self.action = action
+        self.sideWithBall = sideWithBall
+        self.lenOfNearest = lenOfNearest
+        self.nearestPlayer = nearestPlayer
+        self.lenOfMiddleDist = lenOfMiddleDist
+        self.middleDistPlayer = middleDistPlayer
+        self.passPair = passPair
+        self.goalIsNearest = goalIsNearest
+
+    def __repr__(self):
+        return f"GameEvent(index={self.index}, time={self.time}, action={self.action})"
+
+
+class ActionInfo:
+    def __init__(self, time: int, team: str, ind: int, side: str, action: str):
+        self.time = time
+        self.team = team
+        self.player = ind
+        self.side = side
+        self.action = action
+
+    def __repr__(self):
+        return f"ActionInfo(time={self.time}, team={self.team}, ind={self.player}, side={self.side}, action={self.action})"
