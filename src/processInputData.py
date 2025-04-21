@@ -67,6 +67,7 @@ class paramsForCalcPosition:
         self.time = None
         self.side = None
         self.search_side = None
+        self.number = None
 
     def __str__(self):
         return f"""paramsForCalcPosition:
@@ -79,6 +80,7 @@ class paramsForCalcPosition:
       team: {self.team}
       time: {self.time}
       side: {self.side}
+      number: {self.number}
 
     - Координаты:
       absolute: ({self.absoluteX}, {self.absoluteY})

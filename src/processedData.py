@@ -113,6 +113,7 @@ for item in teams:
             else:
                 ansInfoForTick.side = sides[ansInfoForTick.team][1]
             ansInfoForTick.search_side = sides[ansInfoForTick.team][0]
+            ansInfoForTick.number = ind
             # print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
 
@@ -169,15 +170,18 @@ for server_data in server_results:
         # print(key, server_data.action, predicated_actions.get(key))
         if predicated_actions.keys().__contains__(key):
             actions_count["all"] += 1
-            actions_count[server_data.action] += 1
+            actions_count[str(server_data.action).lower()] += 1
             print("RESULT", key, server_data.action, predicated_actions.get(key).action,
                   server_data.action == predicated_actions.get(key).action)
-            predicate_log.write(f"RESULT:, key={key}, server_action={server_data.action},"
+            predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
                                 f" predicate_action={predicated_actions.get(key).action},"
-                                f" compare={server_data.action == predicated_actions.get(key).action}")
-            if server_data.action == predicated_actions.get(key).action:
+                                f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}")
+            if str(server_data.action).lower() == predicated_actions.get(key).action:
                 correct_predicate["all"] += 1
                 correct_predicate[server_data.action] += 1
+print(actions_count)
+print(correct_predicate)
+
 compare_log.write(f"{str(actions_count)}\n"
                   f"{str(correct_predicate)}")
 time_log.close()
@@ -186,6 +190,7 @@ ans_log.close()
 row_log.close()
 fuzzy_log.close()
 predicate_log.close()
+compare_log.flush()
 compare_log.close()
 # # Statistic
 # print('Start statistic')

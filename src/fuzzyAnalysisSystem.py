@@ -235,27 +235,27 @@ class FuzzyAnalysisSystem:
             self.__variables["ball_hold"] = self.__ball_hold_mf(tick_data)
 
     def __rules_handler(self) -> Actions:
-        # Проверка состояния знаний о мяче и позиции
-        if self.__variables.get('ball_knowledge', {}).get('unknown', 0) >= 0.8 or \
-                self.__variables.get('pos_knowledge', {}).get('unknown', 0) >= 0.8:
+        if self.__variables.get('pos_knowledge', {}).get('unknown', 0) >= 0.8:
             return Actions.SEARCHING.name.lower()
 
-        # Проверка предполагаемого состояния
+        if self.__variables.get('ball_knowledge', {}).get('unknown', 0) >= 0.8:
+            return Actions.DRIBBLING.name.lower()
+
         if self.__variables.get('ball_knowledge', {}).get('assumed', 0) >= 0.3 or \
                 self.__variables.get('pos_knowledge', {}).get('assumed', 0) >= 0.3:
-            return self.last_action if hasattr(self, 'last_action') else Actions.SEARCHING.name.lower()
+            return self.last_action if hasattr(self, 'last_action') else Actions.DRIBBLING.name.lower()
 
         # Анализ дистанции до мяча
         ball_distance = self.__variables.get('ball_distance', {})
         team_positioning = self.__variables.get('team_positioning', {})
 
         if ball_distance.get('far', 0) > 0.8:
-            return Actions.SEARCHING.name.lower()
+            return Actions.DRIBBLING.name.lower()
 
         if ball_distance.get('near', 0) >= 0.3:
             if team_positioning.get('closer', 0) >= 0.6:
                 return Actions.FIGHT.name.lower()
-            return Actions.SEARCHING.name.lower()
+            return Actions.DRIBBLING.name.lower()
 
         # Анализ возможности удара и контроля мяча
         gate_possibility = self.__variables.get('gate_possibility', {})
@@ -275,7 +275,7 @@ class FuzzyAnalysisSystem:
                 if gate_possibility.get('partly', 0) >= 0.6:
                     return Actions.DRIBBLING.name.lower()
                 if gate_possibility.get('block', 0) >= 0.7:
-                    return Actions.DRIBBLING.name.lower()  # Аналог ballTurn отсутствует в Enum
+                    return Actions.PASSING.name.lower()
 
         # Стандартное действие по умолчанию
         return Actions.SEARCHING.name.lower()

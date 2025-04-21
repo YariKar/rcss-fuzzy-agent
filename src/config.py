@@ -45,6 +45,6 @@ row_log = open(log_path+"row.txt", "w")
 result_log = open(log_path+"result.txt", "w")
 ans_log = open(log_path+"ans.txt", "w")
 fuzzy_log = open(log_path + "fuzzy.txt", "w")
-predicate_log = open(log_path+ "predicate.txt", "w")
+predicate_log = open(log_path + "predicate.txt", "w")
 compare_log = open(log_path + "compare.txt", "w")
 server_actions_pattern = '-action-groundtruth-v3.csv'
