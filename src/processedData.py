@@ -119,9 +119,9 @@ for item in teams:
             action = fuzzySystem.execute(ansInfoForTick)
             # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
             key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind}"
-            predicated_actions[key] = ActionInfo(elems['time'], item, ind, ansInfoForTick.search_side, action.value)
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind, ansInfoForTick.search_side, action)
             result_log.write(
-                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action.value) + "\n")
+                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX
