@@ -238,24 +238,24 @@ class FuzzyAnalysisSystem:
         # Проверка состояния знаний о мяче и позиции
         if self.__variables.get('ball_knowledge', {}).get('unknown', 0) >= 0.8 or \
                 self.__variables.get('pos_knowledge', {}).get('unknown', 0) >= 0.8:
-            return Actions.SEARCHING
+            return Actions.SEARCHING.name.lower()
 
         # Проверка предполагаемого состояния
         if self.__variables.get('ball_knowledge', {}).get('assumed', 0) >= 0.3 or \
                 self.__variables.get('pos_knowledge', {}).get('assumed', 0) >= 0.3:
-            return self.last_action if hasattr(self, 'last_action') else Actions.SEARCHING
+            return self.last_action if hasattr(self, 'last_action') else Actions.SEARCHING.name.lower()
 
         # Анализ дистанции до мяча
         ball_distance = self.__variables.get('ball_distance', {})
         team_positioning = self.__variables.get('team_positioning', {})
 
         if ball_distance.get('far', 0) > 0.8:
-            return Actions.SEARCHING
+            return Actions.SEARCHING.name.lower()
 
         if ball_distance.get('near', 0) >= 0.3:
             if team_positioning.get('closer', 0) >= 0.6:
-                return Actions.FIGHT
-            return Actions.SEARCHING
+                return Actions.FIGHT.name.lower()
+            return Actions.SEARCHING.name.lower()
 
         # Анализ возможности удара и контроля мяча
         gate_possibility = self.__variables.get('gate_possibility', {})
@@ -263,22 +263,22 @@ class FuzzyAnalysisSystem:
 
         if ball_distance.get('close', 0) >= 0.7:
             if gate_possibility.get('free', 0) >= 0.5:
-                return Actions.KICKING
+                return Actions.KICKING.name.lower()
 
             if ball_hold.get('block', 0) >= 0.7:
-                return Actions.PASSING
+                return Actions.PASSING.name.lower()
 
             if ball_hold.get('risk', 0) >= 0.5:
-                return Actions.FIGHT
+                return Actions.FIGHT.name.lower()
 
             if ball_hold.get('free', 0) >= 0.5:
                 if gate_possibility.get('partly', 0) >= 0.6:
-                    return Actions.DRIBBLING
+                    return Actions.DRIBBLING.name.lower()
                 if gate_possibility.get('block', 0) >= 0.7:
-                    return Actions.SEARCHING  # Аналог ballTurn отсутствует в Enum
+                    return Actions.DRIBBLING.name.lower()  # Аналог ballTurn отсутствует в Enum
 
         # Стандартное действие по умолчанию
-        return Actions.SEARCHING
+        return Actions.SEARCHING.name.lower()
 
     def execute(self, tick_data: paramsForCalcPosition):
         self.__reset_variables()

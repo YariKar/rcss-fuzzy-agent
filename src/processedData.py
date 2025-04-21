@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log, \
-    ans_log, fuzzy_log, sides, predicate_log
+    ans_log, fuzzy_log, sides, predicate_log, compare_log
 from getCoords import *
 from saveModule import infoForTick, storeAgent
 from random import randint
@@ -161,22 +161,32 @@ for item in teams:
 # result_log.write(resultDF)
 # print("ACTIONS FROM SERVER: ", server_results)
 # print("PREDICATED ACTIONS", predicated_actions)
+actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kicking": 0}
+correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kicking": 0}
 for server_data in server_results:
     for player in server_data.nearestPlayer:
         key = f"{server_data.time}{player}"
         # print(key, server_data.action, predicated_actions.get(key))
         if predicated_actions.keys().__contains__(key):
-            print("RESULT",key, server_data.action, predicated_actions.get(key).action,
+            actions_count["all"] += 1
+            actions_count[server_data.action] += 1
+            print("RESULT", key, server_data.action, predicated_actions.get(key).action,
                   server_data.action == predicated_actions.get(key).action)
             predicate_log.write(f"RESULT:, key={key}, server_action={server_data.action},"
                                 f" predicate_action={predicated_actions.get(key).action},"
                                 f" compare={server_data.action == predicated_actions.get(key).action}")
+            if server_data.action == predicated_actions.get(key).action:
+                correct_predicate["all"] += 1
+                correct_predicate[server_data.action] += 1
+compare_log.write(f"{str(actions_count)}\n"
+                  f"{str(correct_predicate)}")
 time_log.close()
 result_log.close()
 ans_log.close()
 row_log.close()
 fuzzy_log.close()
 predicate_log.close()
+compare_log.close()
 # # Statistic
 # print('Start statistic')
 # valueCreateStats = paramsCreateStats(predictObj, resultPredictMoreFiveBallDF, resultPredictFromTwoToFiveBallDF, resultPredictLessTwoBallDF,
