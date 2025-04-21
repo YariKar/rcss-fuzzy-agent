@@ -66,6 +66,7 @@ class paramsForCalcPosition:
         self.team = None
         self.time = None
         self.side = None
+        self.search_side = None
 
     def __str__(self):
         return f"""paramsForCalcPosition:

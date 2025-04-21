@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log,\
-    ans_log, fuzzy_log, sides
+from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log, \
+    ans_log, fuzzy_log, sides, predicate_log
 from getCoords import *
 from saveModule import infoForTick, storeAgent
 from random import randint
 from statistic import createDataForPlt, addDataForStatDist, paramsCreateStats
 from processInputData import readFile, createMapViewFlag, createMapViewMove, \
-    calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal,\
+    calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal, \
     parse_groundtruth_file, ActionInfo
 from fuzzyAnalysisSystem import FuzzyAnalysisSystem
 
@@ -25,7 +25,6 @@ resultDataForPrintVariance = pd.DataFrame(columns=['distName', 'predictTick', 'm
 
 resultDataForPrintBall = pd.DataFrame(columns=['distName', 'predictTick', 'maxDiff'])
 resultDataForPrintVarianceBall = pd.DataFrame(columns=['distName', 'predictTick', 'maxVariance'])
-
 
 resultDF = pd.DataFrame(columns=resultColumn)
 resultStatisticDF = pd.DataFrame(columns=resultStatisticColumn)
@@ -66,16 +65,16 @@ fuzzySystem = FuzzyAnalysisSystem()
 
 server_results = parse_groundtruth_file()
 predicated_actions = {}
-print(server_results)
+# print(server_results)
 
 for item in teams:
     print('team - ', item)
     playerList[item] = {}
     for ind in range(numPeople):
-        if ind > 6:  # TODO for debug
-            break
+        # if ind > 6:  # TODO for debug
+        #     break
         print('player', ind)
-        playerList[item][(ind+1)] = storeAgent()
+        playerList[item][(ind + 1)] = storeAgent()
         varianceArray = []
         absoluteCoordArray = []
         playerName = None
@@ -83,16 +82,15 @@ for item in teams:
         angleOrientation = None
         angleFlag = None
         valueLackFlag = 0
-        for elems in resProcessTeam[item][(ind+1)]:
-            if elems['time'] > 100: #TODO for debug
-                break
-            #print('time - ', elems['time'], item, ind)
-            time_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind)+"\n")
-
+        for elems in resProcessTeam[item][(ind + 1)]:
+            # if elems['time'] > 100:  # TODO for debug
+            #     break
+            # print('time - ', elems['time'], item, ind)
+            time_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + "\n")
 
             nowPlObj = playerList[item][(ind + 1)]
             # timeRow = absolute_Coordinate[absolute_Coordinate['# time'] == elems['time']]
-            absoluteCoord = getAbsolutedCoordinate(item, (ind+1), elems['time'], angleOrientation, False)
+            absoluteCoord = getAbsolutedCoordinate(item, (ind + 1), elems['time'], angleOrientation, False)
             if (absoluteCoord == None):
                 continue
 
@@ -107,20 +105,23 @@ for item in teams:
             paramsTick = paramsForCalcPosition(elems, nowPlObj, angleOrientation,
                                                valueLackFlag, varianceArray, angleFlag, absoluteX, absoluteY)
             ansInfoForTick = calcInfoForTick(paramsTick, resMovePTeam, item, ind, absoluteCoordArray)
+            if ansInfoForTick is None:
+                continue
             ansInfoForTick.time = elems["time"]
-            if (elems["time"]<3000):
+            if elems["time"] < 3000:
                 ansInfoForTick.side = sides[ansInfoForTick.team][0]
             else:
                 ansInfoForTick.side = sides[ansInfoForTick.team][1]
-            #print("ans info for tick - ", str(ansInfoForTick))
+            ansInfoForTick.search_side = sides[ansInfoForTick.team][0]
+            # print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
-            if (ansInfoForTick == None):
-                continue
+
             action = fuzzySystem.execute(ansInfoForTick)
             # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
-            key = f"{elems['time']}{ansInfoForTick.side.upper()}{ind}"
-            predicated_actions[key] = ActionInfo(elems['time'], item, ind,ansInfoForTick.side, action.value)
-            result_log.write('time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action.value) + "\n")
+            key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind}"
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind, ansInfoForTick.search_side, action.value)
+            result_log.write(
+                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action.value) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX
@@ -129,9 +130,9 @@ for item in teams:
 
             newObj = infoForTick(averageX, averageY, absoluteX, absoluteY, ansInfoForTick.radian,
                                  ansInfoForTick.speedX, ansInfoForTick.speedY, ansInfoForTick.arrPlayer)
-            playerList[item][(ind+1)].addNewTickInfo(newObj)
-            if (item == teams[0] and (ind+1) == numberTeamGoalie[0]) or \
-                    (item == teams[1] and (ind+1) == numberTeamGoalie[1]):
+            playerList[item][(ind + 1)].addNewTickInfo(newObj)
+            if (item == teams[0] and (ind + 1) == numberTeamGoalie[0]) or \
+                    (item == teams[1] and (ind + 1) == numberTeamGoalie[1]):
                 averageCoordArrayGlobalGoalie.append({'x': averageX, 'y': averageY})
                 absoluteCoordArrayGlobalGoalie.append({'x': absoluteX, 'y': absoluteY})
             else:
@@ -153,18 +154,29 @@ for item in teams:
             new_row = {'time': elems['time'], 'player': nowPlayer, 'calc x': round(averageX, 4),
                        'calc y': round(averageY, 4), 'absolute x': absoluteX, 'absolute y': absoluteY,
                        'differenceX': round(differenceX, 4), 'differenceY': round(differenceY, 4)}
-            #print("new row - ", new_row)
-            row_log.write(str(new_row)+"\n")
+            # print("new row - ", new_row)
+            row_log.write(str(new_row) + "\n")
             # resultDF = resultDF._append(new_row, ignore_index=True)
 # print("result df - ", resultDF)
 # result_log.write(resultDF)
-print("ACTIONS FROM SERVER: ", server_results)
-print("PREDICATED ACTIONS", predicated_actions)
+# print("ACTIONS FROM SERVER: ", server_results)
+# print("PREDICATED ACTIONS", predicated_actions)
+for server_data in server_results:
+    for player in server_data.nearestPlayer:
+        key = f"{server_data.time}{player}"
+        # print(key, server_data.action, predicated_actions.get(key))
+        if predicated_actions.keys().__contains__(key):
+            print("RESULT",key, server_data.action, predicated_actions.get(key).action,
+                  server_data.action == predicated_actions.get(key).action)
+            predicate_log.write(f"RESULT:, key={key}, server_action={server_data.action},"
+                                f" predicate_action={predicated_actions.get(key).action},"
+                                f" compare={server_data.action == predicated_actions.get(key).action}")
 time_log.close()
 result_log.close()
 ans_log.close()
 row_log.close()
 fuzzy_log.close()
+predicate_log.close()
 # # Statistic
 # print('Start statistic')
 # valueCreateStats = paramsCreateStats(predictObj, resultPredictMoreFiveBallDF, resultPredictFromTwoToFiveBallDF, resultPredictLessTwoBallDF,
