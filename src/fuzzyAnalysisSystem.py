@@ -83,7 +83,7 @@ class FuzzyAnalysisSystem:
         ball_dist = Calculations.distance(player_pos, ball_pos)
         log = f"BALL DIST, {player_pos}, {ball_pos}, {ball_dist}"
         # print(log)
-        fuzzy_log.write(log)
+        # fuzzy_log.write(log)
         if not ball_dist:
             return {'close': 0.0, 'near': 0.0, 'far': 1.0}
 
@@ -283,7 +283,8 @@ class FuzzyAnalysisSystem:
     def execute(self, tick_data: paramsForCalcPosition):
         self.__reset_variables()
         self.__calculate_mf(tick_data)
-        log = f"MATCH FUNCTIONS, {str(self.__variables)}"
+        log = f"MATCH FUNCTIONS, {str(self.__variables)}, {tick_data.time}, {tick_data.team}, {tick_data.side}, " \
+              f"{tick_data.number}\n "
         # print(log)
         fuzzy_log.write(log)
         return self.__rules_handler()

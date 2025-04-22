@@ -113,16 +113,16 @@ for item in teams:
             else:
                 ansInfoForTick.side = sides[ansInfoForTick.team][1]
             ansInfoForTick.search_side = sides[ansInfoForTick.team][0]
-            ansInfoForTick.number = ind
+            ansInfoForTick.number = ind+1
             # print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
 
             action = fuzzySystem.execute(ansInfoForTick)
             # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
-            key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind}"
-            predicated_actions[key] = ActionInfo(elems['time'], item, ind, ansInfoForTick.search_side, action)
+            key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind+1}"
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind+1, ansInfoForTick.search_side, action)
             result_log.write(
-                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind) + " " + str(action) + "\n")
+                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind+1) + " " + str(action) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX
@@ -164,6 +164,8 @@ for item in teams:
 # print("PREDICATED ACTIONS", predicated_actions)
 actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
+incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
+incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 for server_data in server_results:
     for player in server_data.nearestPlayer:
         key = f"{server_data.time}{player}"
@@ -179,11 +181,19 @@ for server_data in server_results:
             if str(server_data.action).lower() == predicated_actions.get(key).action:
                 correct_predicate["all"] += 1
                 correct_predicate[server_data.action] += 1
+            else:
+                incorrect_try_predicate["all"] += 1
+                incorrect_try_predicate[server_data.action] += 1
+                incorrect_result_predicate["all"] += 1
+                incorrect_result_predicate[predicated_actions.get(key).action] += 1
 print(actions_count)
 print(correct_predicate)
-
+print(incorrect_try_predicate)
+print(incorrect_result_predicate)
 compare_log.write(f"{str(actions_count)}\n"
-                  f"{str(correct_predicate)}")
+                  f"{str(correct_predicate)}\n"
+                  f"{str(incorrect_try_predicate)}\n"
+                  f"{str(incorrect_result_predicate)}")
 time_log.close()
 result_log.close()
 ans_log.close()
