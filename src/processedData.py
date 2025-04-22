@@ -162,8 +162,8 @@ for item in teams:
 # result_log.write(resultDF)
 # print("ACTIONS FROM SERVER: ", server_results)
 # print("PREDICATED ACTIONS", predicated_actions)
-actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kicking": 0}
-correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kicking": 0}
+actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
+correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 for server_data in server_results:
     for player in server_data.nearestPlayer:
         key = f"{server_data.time}{player}"
@@ -175,7 +175,7 @@ for server_data in server_results:
                   server_data.action == predicated_actions.get(key).action)
             predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
                                 f" predicate_action={predicated_actions.get(key).action},"
-                                f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}")
+                                f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}\n")
             if str(server_data.action).lower() == predicated_actions.get(key).action:
                 correct_predicate["all"] += 1
                 correct_predicate[server_data.action] += 1

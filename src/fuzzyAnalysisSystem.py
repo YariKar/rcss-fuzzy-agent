@@ -263,13 +263,13 @@ class FuzzyAnalysisSystem:
 
         if ball_distance.get('close', 0) >= 0.7:
             if gate_possibility.get('free', 0) >= 0.5:
-                return Actions.KICKING.name.lower()
+                return Actions.KICKINGG.name.lower()
 
             if ball_hold.get('block', 0) >= 0.7:
-                return Actions.PASSING.name.lower()
+                return Actions.FIGHT.name.lower()
 
             if ball_hold.get('risk', 0) >= 0.5:
-                return Actions.FIGHT.name.lower()
+                return Actions.PASSING.name.lower()
 
             if ball_hold.get('free', 0) >= 0.5:
                 if gate_possibility.get('partly', 0) >= 0.6:

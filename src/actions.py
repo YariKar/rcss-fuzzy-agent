@@ -6,7 +6,7 @@ class Actions(Enum):
     PASSING = "passing",
     DRIBBLING = "dribbling",
     FIGHT = "fight",
-    KICKING = "kicking"
+    KICKINGG = "kickingg"
 
 
 print(Actions.SEARCHING.name.lower())
