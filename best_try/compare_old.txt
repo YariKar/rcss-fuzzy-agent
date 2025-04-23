@@ -1,0 +1,4 @@
+all actions: {'all': 1234, 'searching': 14, 'passing': 202, 'dribbling': 996, 'fight': 20, 'kickingg': 2}
+correct predicate: {'all': 988, 'searching': 0, 'passing': 58, 'dribbling': 930, 'fight': 0, 'kickingg': 0}
+incorrect try predicate this: {'all': 246, 'searching': 14, 'passing': 144, 'dribbling': 66, 'fight': 20, 'kickingg': 2}
+incorrect result predicate this: {'all': 246, 'searching': 0, 'passing': 71, 'dribbling': 175, 'fight': 0, 'kickingg': 0}

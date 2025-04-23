@@ -113,16 +113,16 @@ for item in teams:
             else:
                 ansInfoForTick.side = sides[ansInfoForTick.team][1]
             ansInfoForTick.search_side = sides[ansInfoForTick.team][0]
-            ansInfoForTick.number = ind+1
+            ansInfoForTick.number = ind + 1
             # print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
 
             action = fuzzySystem.execute(ansInfoForTick)
             # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
-            key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind+1}"
-            predicated_actions[key] = ActionInfo(elems['time'], item, ind+1, ansInfoForTick.search_side, action)
+            key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind + 1}"
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind + 1, ansInfoForTick.search_side, action)
             result_log.write(
-                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind+1) + " " + str(action) + "\n")
+                'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind + 1) + " " + str(action) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
             valueLackFlag = ansInfoForTick.valueLackFlag
             averageX = ansInfoForTick.averageX
@@ -167,10 +167,12 @@ correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fi
 incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 for server_data in server_results:
-    for player in server_data.nearestPlayer:
+    players = server_data.nearestPlayer if len(server_data.nearestPlayer) != 0 else [f"{pre}{i}" for pre in ["L", "R"]
+                                                                                     for i in range(1, 12)]
+    for player in players:
         if not predicated_actions.keys().__contains__(f"{server_data.time}{player}"):
             continue
-        keys = [f"{server_data.time+i}{player}" for i in range(-3, 4)]
+        keys = [f"{server_data.time + i}{player}" for i in range(-1, 3)]  # -1 +2 норм
         actions_count["all"] += 1
         actions_count[str(server_data.action).lower()] += 1
         flag = False
@@ -191,9 +193,9 @@ for server_data in server_results:
             incorrect_try_predicate[server_data.action.lower()] += 1
             incorrect_result_predicate["all"] += 1
             if predicated_actions.keys().__contains__(keys[int(len(keys) / 2)]):
-                incorrect_result_predicate[predicated_actions.get(keys[int(len(keys)/2)]).action] += 1
+                incorrect_result_predicate[predicated_actions.get(keys[int(len(keys) / 2)]).action] += 1
             else:
-                print(f"not contain but compare: {keys[int(len(keys) / 2)]}")
+                print(f"not contain but compare: {keys[int(len(keys) / 2)-1]}")
 
         # key = f"{server_data.time}{player}"
         # print(key, server_data.action, predicated_actions.get(key))

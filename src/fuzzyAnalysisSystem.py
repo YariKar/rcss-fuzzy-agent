@@ -214,10 +214,9 @@ class FuzzyAnalysisSystem:
             if key.startswith(enemy_team_prefix) and tick_data.team not in key:
                 enemies.append({"x": float(player.x), "y": float(player.y)})
 
-        # Считаем количество соперников в радиусе 1м от мяча
         near_enemies_count = 0
         for enemy_pos in enemies:
-            if Calculations.distance(enemy_pos, ball_pos) <= 4.0:
+            if Calculations.distance(enemy_pos, ball_pos) <= 10.0:
                 near_enemies_count += 1
 
         # Трапециевидные функции принадлежности
@@ -241,7 +240,7 @@ class FuzzyAnalysisSystem:
             return Actions.SEARCHING.name.lower()
 
         if self.__variables.get('ball_knowledge', {}).get('unknown', 0) >= 0.8:
-            return Actions.DRIBBLING.name.lower()
+            return Actions.SEARCHING.name.lower()
 
         if self.__variables.get('ball_knowledge', {}).get('assumed', 0) >= 0.3 or \
                 self.__variables.get('pos_knowledge', {}).get('assumed', 0) >= 0.3:
@@ -253,28 +252,37 @@ class FuzzyAnalysisSystem:
         gate_possibility = self.__variables.get('gate_possibility', {})
         ball_hold = self.__variables.get('ball_hold', {})
         if ball_distance.get('far', 0) > 0.8:
-            return Actions.DRIBBLING.name.lower()
+            return Actions.SEARCHING.name.lower()
 
         if ball_distance.get('near', 0) >= 0.3:
+            if team_positioning.get('farther', 0) >= 0.6:
+                return Actions.SEARCHING.name.lower()
+            if team_positioning.get('equal', 0) >= 0.6:
+                return Actions.DRIBBLING.name.lower()
             if team_positioning.get('closer', 0) >= 0.6:
                 if ball_hold.get('risk', 0) >= 0.5:
                     return Actions.PASSING.name.lower()
                 if ball_hold.get('block', 0) >= 0.7:
-                    return Actions.FIGHT.name.lower()
+                    return Actions.PASSING.name.lower()
             return Actions.DRIBBLING.name.lower()
 
         if ball_distance.get('close', 0) >= 0.7:
-            if gate_possibility.get('free', 0) >= 0.5:
-                return Actions.KICKINGG.name.lower()
-
             if ball_hold.get('risk', 0) >= 0.5:
-                return Actions.DRIBBLING.name.lower()
-
-            if ball_hold.get('free', 0) >= 0.5:
-                if gate_possibility.get('partly', 0) >= 0.6:
-                    return Actions.DRIBBLING.name.lower()
-                if gate_possibility.get('block', 0) >= 0.7:
-                    return Actions.PASSING.name.lower()
+                return Actions.PASSING.name.lower()
+            if ball_hold.get('block', 0) >= 0.5:
+                return Actions.PASSING.name.lower()
+            return Actions.DRIBBLING.name.lower()
+            # if gate_possibility.get('free', 0) >= 0.5:
+            #     return Actions.KICKINGG.name.lower()
+            #
+            # if ball_hold.get('risk', 0) >= 0.5:
+            #     return Actions.DRIBBLING.name.lower()
+            #
+            # if ball_hold.get('free', 0) >= 0.5:
+            #     if gate_possibility.get('partly', 0) >= 0.6:
+            #         return Actions.DRIBBLING.name.lower()
+            #     if gate_possibility.get('block', 0) >= 0.7:
+            #         return Actions.PASSING.name.lower()
 
         # Стандартное действие по умолчанию
         return Actions.SEARCHING.name.lower()
