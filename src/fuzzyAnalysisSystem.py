@@ -3,6 +3,7 @@ from calculations import Calculations
 from processInputData import paramsForCalcPosition
 from config import fuzzy_log
 
+
 class FuzzyAnalysisSystem:
 
     def __init__(self):
@@ -79,7 +80,8 @@ class FuzzyAnalysisSystem:
         # ball_dist = next((float(flag['dist']) for flag in tick_data.elems['flags']
         #                   if flag['column'] == 'b dist'), None)
         player_pos = {"x": float(tick_data.absoluteX), "y": float(tick_data.absoluteY)}
-        ball_pos = {"x": float(tick_data.arrPlayer.mapPlayer["b dist"].x), "y": float(tick_data.arrPlayer.mapPlayer["b dist"].y)}
+        ball_pos = {"x": float(tick_data.arrPlayer.mapPlayer["b dist"].x),
+                    "y": float(tick_data.arrPlayer.mapPlayer["b dist"].y)}
         ball_dist = Calculations.distance(player_pos, ball_pos)
         log = f"BALL DIST, {player_pos}, {ball_pos}, {ball_dist}"
         # print(log)
@@ -228,7 +230,7 @@ class FuzzyAnalysisSystem:
     def __calculate_mf(self, tick_data: paramsForCalcPosition):
         self.__variables["ball_knowledge"] = self.__ball_knowledge_mf(tick_data)
         self.__variables["pos_knowledge"] = self.__pos_knowledge_mf(tick_data)
-        if self.__variables["ball_knowledge"]["known"] >= 0.7 and self.__variables["pos_knowledge"]["known"] >=0.7:
+        if self.__variables["ball_knowledge"]["known"] >= 0.7 and self.__variables["pos_knowledge"]["known"] >= 0.7:
             self.__variables["ball_distance"] = self.__ball_distance_mf(tick_data)
             self.__variables["team_positioning"] = self.__team_positioning_mf(tick_data)
             self.__variables["gate_possibility"] = self.__gate_possibility_mf(tick_data)
@@ -248,28 +250,25 @@ class FuzzyAnalysisSystem:
         # Анализ дистанции до мяча
         ball_distance = self.__variables.get('ball_distance', {})
         team_positioning = self.__variables.get('team_positioning', {})
-
+        gate_possibility = self.__variables.get('gate_possibility', {})
+        ball_hold = self.__variables.get('ball_hold', {})
         if ball_distance.get('far', 0) > 0.8:
             return Actions.DRIBBLING.name.lower()
 
         if ball_distance.get('near', 0) >= 0.3:
             if team_positioning.get('closer', 0) >= 0.6:
-                return Actions.FIGHT.name.lower()
+                if ball_hold.get('risk', 0) >= 0.5:
+                    return Actions.PASSING.name.lower()
+                if ball_hold.get('block', 0) >= 0.7:
+                    return Actions.FIGHT.name.lower()
             return Actions.DRIBBLING.name.lower()
-
-        # Анализ возможности удара и контроля мяча
-        gate_possibility = self.__variables.get('gate_possibility', {})
-        ball_hold = self.__variables.get('ball_hold', {})
 
         if ball_distance.get('close', 0) >= 0.7:
             if gate_possibility.get('free', 0) >= 0.5:
                 return Actions.KICKINGG.name.lower()
 
-            if ball_hold.get('block', 0) >= 0.7:
-                return Actions.FIGHT.name.lower()
-
             if ball_hold.get('risk', 0) >= 0.5:
-                return Actions.PASSING.name.lower()
+                return Actions.DRIBBLING.name.lower()
 
             if ball_hold.get('free', 0) >= 0.5:
                 if gate_possibility.get('partly', 0) >= 0.6:

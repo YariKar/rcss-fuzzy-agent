@@ -168,32 +168,44 @@ incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 
 incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 for server_data in server_results:
     for player in server_data.nearestPlayer:
-        key = f"{server_data.time}{player}"
-        # print(key, server_data.action, predicated_actions.get(key))
-        if predicated_actions.keys().__contains__(key):
-            actions_count["all"] += 1
-            actions_count[str(server_data.action).lower()] += 1
-            print("RESULT", key, server_data.action, predicated_actions.get(key).action,
-                  server_data.action == predicated_actions.get(key).action)
-            predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
-                                f" predicate_action={predicated_actions.get(key).action},"
-                                f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}\n")
-            if str(server_data.action).lower() == predicated_actions.get(key).action:
-                correct_predicate["all"] += 1
-                correct_predicate[server_data.action] += 1
+        if not predicated_actions.keys().__contains__(f"{server_data.time}{player}"):
+            continue
+        keys = [f"{server_data.time+i}{player}" for i in range(-3, 4)]
+        actions_count["all"] += 1
+        actions_count[str(server_data.action).lower()] += 1
+        flag = False
+        for key in keys:
+            if predicated_actions.keys().__contains__(key):
+                print("RESULT", key, server_data.action, predicated_actions.get(key).action,
+                      server_data.action == predicated_actions.get(key).action)
+                predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
+                                    f" predicate_action={predicated_actions.get(key).action},"
+                                    f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}\n")
+                if str(server_data.action).lower() == predicated_actions.get(key).action:
+                    correct_predicate["all"] += 1
+                    correct_predicate[server_data.action.lower()] += 1
+                    flag = True
+                    break
+        if not flag:
+            incorrect_try_predicate["all"] += 1
+            incorrect_try_predicate[server_data.action.lower()] += 1
+            incorrect_result_predicate["all"] += 1
+            if predicated_actions.keys().__contains__(keys[int(len(keys) / 2)]):
+                incorrect_result_predicate[predicated_actions.get(keys[int(len(keys)/2)]).action] += 1
             else:
-                incorrect_try_predicate["all"] += 1
-                incorrect_try_predicate[server_data.action] += 1
-                incorrect_result_predicate["all"] += 1
-                incorrect_result_predicate[predicated_actions.get(key).action] += 1
+                print(f"not contain but compare: {keys[int(len(keys) / 2)]}")
+
+        # key = f"{server_data.time}{player}"
+        # print(key, server_data.action, predicated_actions.get(key))
+
 print(actions_count)
 print(correct_predicate)
 print(incorrect_try_predicate)
 print(incorrect_result_predicate)
-compare_log.write(f"{str(actions_count)}\n"
-                  f"{str(correct_predicate)}\n"
-                  f"{str(incorrect_try_predicate)}\n"
-                  f"{str(incorrect_result_predicate)}")
+compare_log.write(f"all actions: {str(actions_count)}\n"
+                  f"correct predicate: {str(correct_predicate)}\n"
+                  f"incorrect try predicate this: {str(incorrect_try_predicate)}\n"
+                  f"incorrect result predicate this: {str(incorrect_result_predicate)}")
 time_log.close()
 result_log.close()
 ans_log.close()
