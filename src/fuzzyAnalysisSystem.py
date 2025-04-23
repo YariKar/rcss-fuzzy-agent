@@ -251,27 +251,31 @@ class FuzzyAnalysisSystem:
         team_positioning = self.__variables.get('team_positioning', {})
         gate_possibility = self.__variables.get('gate_possibility', {})
         ball_hold = self.__variables.get('ball_hold', {})
-        if ball_distance.get('far', 0) > 0.8:
+        if ball_distance.get('far', 0) >= 0.65:
             return Actions.SEARCHING.name.lower()
 
-        if ball_distance.get('near', 0) >= 0.3:
-            if team_positioning.get('farther', 0) >= 0.6:
-                return Actions.SEARCHING.name.lower()
+        if ball_distance.get('near', 0) >= 0.5:
             if team_positioning.get('equal', 0) >= 0.6:
                 return Actions.DRIBBLING.name.lower()
+            if team_positioning.get('farther', 0) >= 0.6:
+                return Actions.SEARCHING.name.lower()
             if team_positioning.get('closer', 0) >= 0.6:
                 if ball_hold.get('risk', 0) >= 0.5:
                     return Actions.PASSING.name.lower()
-                if ball_hold.get('block', 0) >= 0.7:
+                if ball_hold.get('block', 0) >= 0.5:
                     return Actions.PASSING.name.lower()
-            return Actions.DRIBBLING.name.lower()
+                if ball_hold.get('free', 0) >= 0.7:
+                    return Actions.DRIBBLING.name.lower()
+            return Actions.SEARCHING.name.lower()
 
         if ball_distance.get('close', 0) >= 0.7:
+            if ball_hold.get('free', 0) >= 0.7:
+                return Actions.DRIBBLING.name.lower()
             if ball_hold.get('risk', 0) >= 0.5:
                 return Actions.PASSING.name.lower()
             if ball_hold.get('block', 0) >= 0.5:
                 return Actions.PASSING.name.lower()
-            return Actions.DRIBBLING.name.lower()
+            return Actions.SEARCHING.name.lower()
             # if gate_possibility.get('free', 0) >= 0.5:
             #     return Actions.KICKINGG.name.lower()
             #
