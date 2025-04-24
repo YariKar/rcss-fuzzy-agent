@@ -235,7 +235,7 @@ class FuzzyAnalysisSystem:
             self.__variables["gate_possibility"] = self.__gate_possibility_mf(tick_data)
             self.__variables["ball_hold"] = self.__ball_hold_mf(tick_data)
 
-    def __rules_handler(self) -> Actions:
+    def __rules_handler(self) -> str:
         if self.__variables.get('pos_knowledge', {}).get('unknown', 0) >= 0.8:
             return Actions.SEARCHING.name.lower()
 
@@ -254,8 +254,8 @@ class FuzzyAnalysisSystem:
         if ball_distance.get('far', 0) >= 0.65:
             return Actions.SEARCHING.name.lower()
 
-        if ball_distance.get('near', 0) >= 0.5:
-            if team_positioning.get('equal', 0) >= 0.6:
+        if ball_distance.get('near', 0) >= 0.6:
+            if team_positioning.get('equal', 0) >= 0.7:
                 return Actions.DRIBBLING.name.lower()
             if team_positioning.get('farther', 0) >= 0.6:
                 return Actions.SEARCHING.name.lower()
@@ -268,13 +268,17 @@ class FuzzyAnalysisSystem:
                     return Actions.DRIBBLING.name.lower()
             return Actions.SEARCHING.name.lower()
 
-        if ball_distance.get('close', 0) >= 0.9:
+        if ball_distance.get('close', 0) >= 0.75:
+            if gate_possibility.get("block") >= 0.5:
+                return Actions.SEARCHING.name.lower()
+            if gate_possibility.get("partly") >= 0.5:
+                return Actions.PASSING.name.lower()
+            if ball_hold.get('risk', 0) >= 0.6:
+                return Actions.DRIBBLING.name.lower()
+            if ball_hold.get('block', 0) >= 0.4:
+                return Actions.PASSING.name.lower()
             if ball_hold.get('free', 0) >= 0.7:
                 return Actions.DRIBBLING.name.lower()
-            if ball_hold.get('risk', 0) >= 0.5:
-                return Actions.PASSING.name.lower()
-            if ball_hold.get('block', 0) >= 0.5:
-                return Actions.PASSING.name.lower()
             return Actions.SEARCHING.name.lower()
 
         # Стандартное действие по умолчанию
