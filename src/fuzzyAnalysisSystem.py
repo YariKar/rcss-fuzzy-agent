@@ -71,8 +71,8 @@ class FuzzyAnalysisSystem:
         return {'known': 0.0, 'assumed': 0.0, 'unknown': 1.0}
 
     def __ball_distance_mf(self, tick_data: paramsForCalcPosition):
-        CLOSE_MAX = 0.7
-        CLOSE_MIN = 1.7
+        CLOSE_MAX = 3
+        CLOSE_MIN = 7
         NEAR_MAX = 25
         NEAR_MIN = 30
 
@@ -261,14 +261,14 @@ class FuzzyAnalysisSystem:
                 return Actions.SEARCHING.name.lower()
             if team_positioning.get('closer', 0) >= 0.6:
                 if ball_hold.get('risk', 0) >= 0.5:
-                    return Actions.PASSING.name.lower()
+                    return Actions.DRIBBLING.name.lower()
                 if ball_hold.get('block', 0) >= 0.5:
-                    return Actions.PASSING.name.lower()
+                    return Actions.SEARCHING.name.lower()
                 if ball_hold.get('free', 0) >= 0.7:
                     return Actions.DRIBBLING.name.lower()
             return Actions.SEARCHING.name.lower()
 
-        if ball_distance.get('close', 0) >= 0.7:
+        if ball_distance.get('close', 0) >= 0.9:
             if ball_hold.get('free', 0) >= 0.7:
                 return Actions.DRIBBLING.name.lower()
             if ball_hold.get('risk', 0) >= 0.5:
@@ -276,17 +276,6 @@ class FuzzyAnalysisSystem:
             if ball_hold.get('block', 0) >= 0.5:
                 return Actions.PASSING.name.lower()
             return Actions.SEARCHING.name.lower()
-            # if gate_possibility.get('free', 0) >= 0.5:
-            #     return Actions.KICKINGG.name.lower()
-            #
-            # if ball_hold.get('risk', 0) >= 0.5:
-            #     return Actions.DRIBBLING.name.lower()
-            #
-            # if ball_hold.get('free', 0) >= 0.5:
-            #     if gate_possibility.get('partly', 0) >= 0.6:
-            #         return Actions.DRIBBLING.name.lower()
-            #     if gate_possibility.get('block', 0) >= 0.7:
-            #         return Actions.PASSING.name.lower()
 
         # Стандартное действие по умолчанию
         return Actions.SEARCHING.name.lower()

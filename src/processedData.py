@@ -176,8 +176,10 @@ for server_data in server_results:
         actions_count["all"] += 1
         actions_count[str(server_data.action).lower()] += 1
         flag = False
+        once_predicate = False
         for key in keys:
             if predicated_actions.keys().__contains__(key):
+                once_predicate = True
                 print("RESULT", key, server_data.action, predicated_actions.get(key).action,
                       server_data.action == predicated_actions.get(key).action)
                 predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
@@ -188,7 +190,7 @@ for server_data in server_results:
                     correct_predicate[server_data.action.lower()] += 1
                     flag = True
                     break
-        if not flag:
+        if not flag and once_predicate:
             incorrect_try_predicate["all"] += 1
             incorrect_try_predicate[server_data.action.lower()] += 1
             incorrect_result_predicate["all"] += 1
