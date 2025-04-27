@@ -166,8 +166,8 @@ actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight"
 correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
-actions_count_by_nearest_players = {i: 0 for i in range(1, 12)}
-correct_predicate_by_nearest_players = {i: 0 for i in range(1, 12)}
+actions_count_by_nearest_players = {i: 0 for i in range(12)}
+correct_predicate_by_nearest_players = {i: 0 for i in range(12)}
 for server_data in server_results:
     players = server_data.nearestPlayer if len(server_data.nearestPlayer) != 0 else [f"{pre}{i}" for pre in ["L", "R"]
                                                                                      for i in range(1, 12)]
