@@ -1,6 +1,6 @@
-from config import Flags, numPeople, server_actions_pattern
+from config import Flags, numPeople
 from getCoords import *
-from saveModule import posPlayer, otherPlayer, infoForTick, storeAgent
+from saveModule import posPlayer, otherPlayer, storeAgent
 import ast
 
 

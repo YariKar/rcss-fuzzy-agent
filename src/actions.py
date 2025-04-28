@@ -8,5 +8,3 @@ class Actions(Enum):
     FIGHT = "fight",
     KICKINGG = "kickingg"
 
-
-print(Actions.SEARCHING.name.lower())

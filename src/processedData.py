@@ -1,11 +1,8 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log, \
     ans_log, fuzzy_log, sides, predicate_log, compare_log
 from getCoords import *
 from saveModule import infoForTick, storeAgent
 from random import randint
-from statistic import createDataForPlt, addDataForStatDist, paramsCreateStats
 from processInputData import readFile, createMapViewFlag, createMapViewMove, \
     calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal, \
     parse_groundtruth_file, ActionInfo
@@ -28,8 +25,6 @@ resultDataForPrintVarianceBall = pd.DataFrame(columns=['distName', 'predictTick'
 
 resultDF = pd.DataFrame(columns=resultColumn)
 resultStatisticDF = pd.DataFrame(columns=resultStatisticColumn)
-# resultPredictDF = pd.DataFrame(columns=resultPredictColumn)
-# resultPredictStatisticDF = pd.DataFrame(columns=resultStatisticColumn)
 resultPredictStatisticLessTwoDF = pd.DataFrame(columns=resultStatisticColumn)
 resultPredictStatisticFromTwoToFiveDF = pd.DataFrame(columns=resultStatisticColumn)
 resultPredictStatisticMoreFiveDF = pd.DataFrame(columns=resultStatisticColumn)
@@ -40,11 +35,6 @@ resultPredictMoreFiveDF = pd.DataFrame(columns=resultPredictColumn)
 resultPredictLessTwoBallDF = pd.DataFrame(columns=resultPredictColumn)
 resultPredictFromTwoToFiveBallDF = pd.DataFrame(columns=resultPredictColumn)
 resultPredictMoreFiveBallDF = pd.DataFrame(columns=resultPredictColumn)
-
-# задаётся по какому игроку нужно получить результат
-needTeam = teams[0]
-needPlayer = 1
-# TODO - доделать пресказание для мяча!
 
 averageCoordArrayGlobal = []
 absoluteCoordArrayGlobal = []
@@ -157,7 +147,7 @@ for item in teams:
                        'differenceX': round(differenceX, 4), 'differenceY': round(differenceY, 4)}
             # print("new row - ", new_row)
             row_log.write(str(new_row) + "\n")
-            # resultDF = resultDF._append(new_row, ignore_index=True)
+            resultDF = resultDF._append(new_row, ignore_index=True)
 # print("result df - ", resultDF)
 # result_log.write(resultDF)
 # print("ACTIONS FROM SERVER: ", server_results)
@@ -204,8 +194,6 @@ for server_data in server_results:
             else:
                 print(f"not contain but compare: {keys[int(len(keys) / 2) - 1]}")
 
-        # key = f"{server_data.time}{player}"
-        # print(key, server_data.action, predicated_actions.get(key))
 
 print(actions_count)
 print(correct_predicate)
@@ -227,137 +215,3 @@ fuzzy_log.close()
 predicate_log.close()
 compare_log.flush()
 compare_log.close()
-# # Statistic
-# print('Start statistic')
-# valueCreateStats = paramsCreateStats(predictObj, resultPredictMoreFiveBallDF, resultPredictFromTwoToFiveBallDF, resultPredictLessTwoBallDF,
-#          resultPredictMoreFiveDF, resultPredictFromTwoToFiveDF, resultPredictLessTwoDF,
-#          resultPredictStatisticLessTwoDF, resultPredictStatisticFromTwoToFiveDF, resultPredictStatisticMoreFiveDF)
-# dataForStatDist = addDataForStatDist(valueCreateStats, False)
-#
-# resultPredictMoreFiveBallDF = dataForStatDist.resultPredictMoreFiveBallDF
-# resultPredictFromTwoToFiveBallDF = dataForStatDist.resultPredictFromTwoToFiveBallDF
-# resultPredictLessTwoBallDF = dataForStatDist.resultPredictLessTwoBallDF
-# resultPredictMoreFiveDF = dataForStatDist.resultPredictMoreFiveDF
-# resultPredictFromTwoToFiveDF = dataForStatDist.resultPredictFromTwoToFiveDF
-# resultPredictLessTwoDF = dataForStatDist.resultPredictLessTwoDF
-#
-# #resultStatisticDF = calculateExpectationAndVariance(resultStatisticDF, difference, playerName)
-# # resultDF.to_csv(str(entropyName) + 'resultCalc.csv')
-# # resultStatisticDF.to_csv(str(entropyName) + 'resultStatistic.csv')
-#
-# # resultDF.to_csv(needTeam + '_' + str(needPlayer) + '_resultCalc.csv')
-# # resultStatisticDF.to_csv(needTeam + '_' + str(needPlayer) + '_resultStatistic.csv')
-#
-# #resultPredictDF.to_csv(str(entropyName) + 'resultPredict.csv')
-# #resultPredictStatisticDF.to_csv(str(entropyName) + 'resultPredictStatistic.csv')
-#
-# resultPredictLessTwoDF.to_csv(str(entropyName) + 'resultPredictLessTwo.csv')
-# resultPredictFromTwoToFiveDF.to_csv(str(entropyName) + 'resultPredictFromTwoToFive.csv')
-# resultPredictMoreFiveDF.to_csv(str(entropyName) + 'resultPredictMoreFive.csv')
-# #
-# # resultPredictStatisticLessTwoDF.to_csv(str(entropyName) + 'resultPredictStatisticLessTwo.csv')
-# # resultPredictStatisticFromTwoToFiveDF.to_csv(str(entropyName) + 'resultPredictStatisticFromTwoToFive.csv')
-# # resultPredictStatisticMoreFiveDF.to_csv(str(entropyName) + 'resultPredictStatisticMoreFive.csv')
-#
-# # resultPredictLessTwoDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictLessTwo.csv')
-# # resultPredictFromTwoToFiveDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictFromTwoToFive.csv')
-# # resultPredictMoreFiveDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictMoreFive.csv')
-#
-# resultPredictLessTwoBallDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictLessTwoBallDF.csv')
-# resultPredictFromTwoToFiveBallDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictFromTwoToFiveBallDF.csv')
-# resultPredictMoreFiveBallDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictMoreFiveBallDF.csv')
-#
-# # resultPredictStatisticLessTwoDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictStatisticLessTwo.csv')
-# # resultPredictStatisticFromTwoToFiveDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictStatisticFromTwoToFive.csv')
-# # resultPredictStatisticMoreFiveDF.to_csv(needTeam + '_' + str(needPlayer) + 'resultPredictStatisticMoreFive.csv')
-# #print(len(resultPredictLessTwoDF.index), len(resultPredictFromTwoToFiveDF.index), len(resultPredictMoreFiveDF.index))
-# printDataAns = createDataForPlt(resultPredictLessTwoDF, resultDataForPrint, resultDataForPrintVariance, 'PredictLessTwo')
-# resultDataForPrint = printDataAns['DFAddOne']
-# resultDataForPrintVariance = printDataAns['DFAddTwo']
-#
-# printDataAns = createDataForPlt(resultPredictFromTwoToFiveDF, resultDataForPrint, resultDataForPrintVariance, 'FromTwoToFive')
-# resultDataForPrint = printDataAns['DFAddOne']
-# resultDataForPrintVariance = printDataAns['DFAddTwo']
-#
-# printDataAns = createDataForPlt(resultPredictMoreFiveDF, resultDataForPrint, resultDataForPrintVariance, 'MoreFive')
-# resultDataForPrint = printDataAns['DFAddOne']
-# resultDataForPrintVariance = printDataAns['DFAddTwo']
-#
-# # Ball
-# printDataAns = createDataForPlt(resultPredictLessTwoBallDF, resultDataForPrintBall, resultDataForPrintVarianceBall, 'PredictLessTwo')
-# resultDataForPrintBall = printDataAns['DFAddOne']
-# resultDataForPrintVarianceBall = printDataAns['DFAddTwo']
-#
-# printDataAns = createDataForPlt(resultPredictFromTwoToFiveBallDF, resultDataForPrintBall, resultDataForPrintVarianceBall, 'FromTwoToFive')
-# resultDataForPrintBall = printDataAns['DFAddOne']
-# resultDataForPrintVarianceBall = printDataAns['DFAddTwo']
-#
-# printDataAns = createDataForPlt(resultPredictMoreFiveBallDF, resultDataForPrintBall, resultDataForPrintVarianceBall, 'MoreFive')
-# resultDataForPrintBall = printDataAns['DFAddOne']
-# resultDataForPrintVarianceBall = printDataAns['DFAddTwo']
-#
-# order = resultDataForPrint['predictTick']
-# dfWide = resultDataForPrint.pivot_table(index='predictTick', columns='distName', values='maxDiff')
-# dfWide = dfWide.reindex(order, axis=0)
-#
-# order = resultDataForPrintVariance['predictTick']
-# dfWideVariance = resultDataForPrintVariance.pivot_table(index='predictTick', columns='distName', values='maxVariance')
-# dfWideVariance = dfWideVariance.reindex(order, axis=0)
-#
-# order = resultDataForPrintBall['predictTick']
-# dfWideBall = resultDataForPrintBall.pivot_table(index='predictTick', columns='distName', values='maxDiff')
-# dfWideBall = dfWideBall.reindex(order, axis=0)
-#
-# order = resultDataForPrintVarianceBall['predictTick']
-# dfWideVarianceBall = resultDataForPrintVarianceBall.pivot_table(index='predictTick', columns='distName', values='maxVariance')
-# dfWideVarianceBall = dfWideVarianceBall.reindex(order, axis=0)
-#
-# # print('dfWide')
-# # print(dfWide)
-# #
-# # print('dfWideVariance')
-# # print(dfWideVariance)
-#
-# # df = sns.load_dataset('iris')
-# # sns_plot = sns.pairplot(df, hue='species', height=2.5)
-# # sns_plot.savefig("output.png")
-#
-# sns_plot = None
-# print('dfWide draw')
-# sns_plot = sns.lineplot(data=dfWide)
-# plt.savefig(str(entropyName) + 'dfWideDrawSS.jpg', dpi=300)
-# plt.show()
-# #fig = sns_plot.get_figure()
-# #fig.savefig(str(entropyName) + 'dfWideDraw.jpg')
-#
-# print('dfWideVariance draw')
-# sns_plot = sns.lineplot(data=dfWideVariance)
-# plt.savefig(str(entropyName) + 'dfWideVarianceDraw.jpg', dpi=300)
-# plt.show()
-#
-# # print('dfWideBall')
-# # print(dfWideBall)
-# #
-# # print('dfWideVarianceBall')
-# # print(dfWideVarianceBall)
-#
-#
-# print('dfWide draw Ball')
-# sns_plot = sns.lineplot(data=dfWideBall)
-# plt.savefig(str(entropyName) + 'dfWideDrawBall.jpg', dpi=300)
-# plt.show()
-#
-# print('dfWideVariance draw Ball')
-# sns_plot = sns.lineplot(data=dfWideVarianceBall)
-# plt.savefig(str(entropyName) + 'dfWideVarianceBall.jpg', dpi=300)
-# plt.show()
-#
-# # movementsTenTickDF = pd.DataFrame(columns=movementsTenTick)
-# #
-# # needTickSize = 10
-# # movementsTenTickDF = movementsTenTickDF.append(calcMaxAndMidDistForInterval(averageCoordArrayGlobal, needTickSize, 'averageCoordArrayGlobal'), ignore_index=True)
-# # movementsTenTickDF = movementsTenTickDF.append(calcMaxAndMidDistForInterval(absoluteCoordArrayGlobal, needTickSize, 'absoluteCoordArrayGlobal'), ignore_index=True)
-# # movementsTenTickDF = movementsTenTickDF.append(calcMaxAndMidDistForInterval(averageCoordArrayGlobalGoalie, needTickSize, 'averageCoordArrayGlobalGoalie'), ignore_index=True)
-# # movementsTenTickDF = movementsTenTickDF.append(calcMaxAndMidDistForInterval(absoluteCoordArrayGlobalGoalie, needTickSize, 'absoluteCoordArrayGlobalGoalie'), ignore_index=True)
-# #
-# # movementsTenTickDF.to_csv(str(entropyName) + 'movementsTenTickDF.csv')
