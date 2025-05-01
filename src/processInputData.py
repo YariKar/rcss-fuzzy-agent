@@ -389,12 +389,14 @@ class GameEvent:
 
 
 class ActionInfo:
-    def __init__(self, time: int, team: str, ind: int, side: str, action: str):
+    def __init__(self, time: int, team: str, ind: int, side: str, action: str, seen_enemies_count: int):
         self.time = time
         self.team = team
         self.player = ind
         self.side = side
         self.action = action
+        self.seen_enemies_count = seen_enemies_count
 
     def __repr__(self):
-        return f"ActionInfo(time={self.time}, team={self.team}, ind={self.player}, side={self.side}, action={self.action})"
+        return f"ActionInfo(time={self.time}, team={self.team}, ind={self.player}, side={self.side}," \
+               f" action={self.action}, seen_enemies_count={self.seen_enemies_count})"

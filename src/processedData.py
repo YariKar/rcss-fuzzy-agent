@@ -107,10 +107,11 @@ for item in teams:
             # print("ans info for tick - ", str(ansInfoForTick))
             ans_log.write(str(ansInfoForTick))
 
-            action = fuzzySystem.execute(ansInfoForTick)
+            action, seen_enemies_count = fuzzySystem.execute(ansInfoForTick)
             # print('action: ', elems['time'], item, ind, ansInfoForTick.side, action.value)
             key = f"{elems['time']}{ansInfoForTick.search_side.upper()}{ind + 1}"
-            predicated_actions[key] = ActionInfo(elems['time'], item, ind + 1, ansInfoForTick.search_side, action)
+            predicated_actions[key] = ActionInfo(elems['time'], item, ind + 1, ansInfoForTick.search_side, action,
+                                                 seen_enemies_count)
             result_log.write(
                 'time - ' + str(elems['time']) + " " + str(item) + " " + str(ind + 1) + " " + str(action) + "\n")
             angleOrientation = ansInfoForTick.angleOrientation
@@ -158,6 +159,8 @@ incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 
 incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 actions_count_by_nearest_players = {i: 0 for i in range(12)}
 correct_predicate_by_nearest_players = {i: 0 for i in range(12)}
+actions_count_by_seen_enemies = {i: 0 for i in range(12)}
+correct_predicate_by_seen_enemies = {i: 0 for i in range(12)}
 for server_data in server_results:
     players = server_data.nearestPlayer if len(server_data.nearestPlayer) != 0 else [f"{pre}{i}" for pre in ["L", "R"]
                                                                                      for i in range(1, 12)]
@@ -178,17 +181,21 @@ for server_data in server_results:
                       server_data.action == predicated_actions.get(key).action)
                 predicate_log.write(f"RESULT: key={key}, server_action={server_data.action},"
                                     f" predicate_action={predicated_actions.get(key).action},"
-                                    f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}\n")
+                                    f" compare={str(server_data.action).lower() == predicated_actions.get(key).action}"
+                                    f"\n")
                 if str(server_data.action).lower() == predicated_actions.get(key).action:
                     correct_predicate["all"] += 1
                     correct_predicate[server_data.action.lower()] += 1
                     correct_predicate_by_nearest_players[nearest_players_count] += 1
+                    actions_count_by_seen_enemies[predicated_actions.get(key).seen_enemies_count] += 1
+                    correct_predicate_by_seen_enemies[predicated_actions.get(key).seen_enemies_count] += 1
                     flag = True
                     break
         if not flag and once_predicate:
             incorrect_try_predicate["all"] += 1
             incorrect_try_predicate[server_data.action.lower()] += 1
             incorrect_result_predicate["all"] += 1
+            actions_count_by_seen_enemies[predicated_actions.get(f"{server_data.time}{player}").seen_enemies_count] += 1
             if predicated_actions.keys().__contains__(keys[int(len(keys) / 2)]):
                 incorrect_result_predicate[predicated_actions.get(keys[int(len(keys) / 2)]).action] += 1
             else:
@@ -201,12 +208,16 @@ print(incorrect_try_predicate)
 print(incorrect_result_predicate)
 print(actions_count_by_nearest_players)
 print(correct_predicate_by_nearest_players)
+print(actions_count_by_seen_enemies)
+print(correct_predicate_by_seen_enemies)
 compare_log.write(f"all actions: {str(actions_count)}\n"
                   f"correct predicate: {str(correct_predicate)}\n"
                   f"incorrect try predicate this: {str(incorrect_try_predicate)}\n"
                   f"incorrect result predicate this: {str(incorrect_result_predicate)}\n"
                   f"actions by nearest players count: {str(actions_count_by_nearest_players)}\n"
-                  f"correct predicate by nearest players count: {str(correct_predicate_by_nearest_players)}")
+                  f"correct predicate by nearest players count: {str(correct_predicate_by_nearest_players)}\n"
+                  f"actions by seen enemies: {str(actions_count_by_seen_enemies)}\n"
+                  f"correct predicate by seen enemies: {str(correct_predicate_by_seen_enemies)}")
 time_log.close()
 result_log.close()
 ans_log.close()

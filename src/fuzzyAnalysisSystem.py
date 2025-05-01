@@ -10,6 +10,7 @@ class FuzzyAnalysisSystem:
 
         self.__assumed_know_value = 3
         self.__variables = self.__reset_variables()
+        self.seen_enemies_count = 0
 
     def __reset_variables(self):
         return {
@@ -218,7 +219,7 @@ class FuzzyAnalysisSystem:
         for enemy_pos in enemies:
             if Calculations.distance(enemy_pos, ball_pos) <= 10.0:
                 near_enemies_count += 1
-
+        self.seen_enemies_count = len(enemies)
         # Трапециевидные функции принадлежности
         return {
             "free": Calculations.trapezoid_mf(near_enemies_count, [-1, -0.5, 0.5, 1.0]),
@@ -286,10 +287,11 @@ class FuzzyAnalysisSystem:
 
     def execute(self, tick_data: paramsForCalcPosition):
         self.__reset_variables()
+        self.seen_enemies_count = 0
         self.__calculate_mf(tick_data)
         log = f"MATCH FUNCTIONS, {str(self.__variables)}, {tick_data.time}, {tick_data.team}, {tick_data.side}, " \
               f"{tick_data.number}\n "
         # print(log)
         fuzzy_log.write(log)
-        return self.__rules_handler()
+        return self.__rules_handler(), self.seen_enemies_count
         pass
