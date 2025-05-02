@@ -1,10 +1,10 @@
 from config import resultColumn, resultStatisticColumn, resultPredictColumn, numPeople, time_log, result_log, row_log, \
     ans_log, fuzzy_log, sides, predicate_log, compare_log
 from getCoords import *
-from saveModule import infoForTick, storeAgent
+from saveModule import InfoForTick, StoreAgent
 from random import randint
-from processInputData import readFile, createMapViewFlag, createMapViewMove, \
-    calcInfoForTick, paramsForCalcPosition, createDataTickWithPredictVal, paramsForDataTickWithPredictVal, \
+from processInputData import read_file, create_map_view_flag, create_map_view_move, \
+    calc_info_for_tick, ParamsForCalcPosition, create_data_tick_with_predict_val, ParamsForDataTickWithPredictVal, \
     parse_groundtruth_file, ActionInfo
 from fuzzyAnalysisSystem import FuzzyAnalysisSystem
 
@@ -41,13 +41,13 @@ absoluteCoordArrayGlobal = []
 averageCoordArrayGlobalGoalie = []
 absoluteCoordArrayGlobalGoalie = []
 
-readData = readFile(resFlagsTeam, resMovTeam)
+readData = read_file(resFlagsTeam, resMovTeam)
 resFlagsTeam = readData['resFlags']
 resMovTeam = readData['resMov']
 
-resProcessTeam = createMapViewFlag(resProcessTeam, resFlagsTeam)
+resProcessTeam = create_map_view_flag(resProcessTeam, resFlagsTeam)
 
-dataViewMap = createMapViewMove(resMovePTeam, resMoveBTeam, resMovTeam)
+dataViewMap = create_map_view_move(resMovePTeam, resMoveBTeam, resMovTeam)
 resMovePTeam = dataViewMap['resMoveP']
 resMoveBTeam = dataViewMap['resMoveB']
 
@@ -64,7 +64,7 @@ for item in teams:
         # if ind > 6:  # TODO for debug
         #     break
         print('player', ind)
-        playerList[item][(ind + 1)] = storeAgent()
+        playerList[item][(ind + 1)] = StoreAgent()
         varianceArray = []
         absoluteCoordArray = []
         playerName = None
@@ -80,7 +80,7 @@ for item in teams:
 
             nowPlObj = playerList[item][(ind + 1)]
             # timeRow = absolute_Coordinate[absolute_Coordinate['# time'] == elems['time']]
-            absoluteCoord = getAbsolutedCoordinate(item, (ind + 1), elems['time'], angleOrientation, False)
+            absoluteCoord = get_absoluted_coordinate(item, (ind + 1), elems['time'], angleOrientation, False)
             if (absoluteCoord == None):
                 continue
 
@@ -92,9 +92,9 @@ for item in teams:
             absoluteY = absoluteCoord.absoluteY
 
             absoluteCoordArray.append({'x': absoluteX, 'y': absoluteY})
-            paramsTick = paramsForCalcPosition(elems, nowPlObj, angleOrientation,
+            paramsTick = ParamsForCalcPosition(elems, nowPlObj, angleOrientation,
                                                valueLackFlag, varianceArray, angleFlag, absoluteX, absoluteY)
-            ansInfoForTick = calcInfoForTick(paramsTick, resMovePTeam, item, ind, absoluteCoordArray)
+            ansInfoForTick = calc_info_for_tick(paramsTick, resMovePTeam, item, ind, absoluteCoordArray)
             if ansInfoForTick is None:
                 continue
             ansInfoForTick.time = elems["time"]
@@ -120,9 +120,9 @@ for item in teams:
             averageY = ansInfoForTick.averageY
             varianceArray = ansInfoForTick.varianceArray
 
-            newObj = infoForTick(averageX, averageY, absoluteX, absoluteY, ansInfoForTick.radian,
+            newObj = InfoForTick(averageX, averageY, absoluteX, absoluteY, ansInfoForTick.radian,
                                  ansInfoForTick.speedX, ansInfoForTick.speedY, ansInfoForTick.arrPlayer)
-            playerList[item][(ind + 1)].addNewTickInfo(newObj)
+            playerList[item][(ind + 1)].add_new_tick_info(newObj)
             if (item == teams[0] and (ind + 1) == numberTeamGoalie[0]) or \
                     (item == teams[1] and (ind + 1) == numberTeamGoalie[1]):
                 averageCoordArrayGlobalGoalie.append({'x': averageX, 'y': averageY})
@@ -130,14 +130,14 @@ for item in teams:
             else:
                 averageCoordArrayGlobal.append({'x': averageX, 'y': averageY})
                 absoluteCoordArrayGlobal.append({'x': absoluteX, 'y': absoluteY})
-            removeList = playerList[item][(ind + 1)].removeList()
-            listPredict = playerList[item][(ind + 1)].predictForDisappearedPlayer(removeList)
-            playerList[item][(ind + 1)].savePredictCoords(listPredict)
+            removeList = playerList[item][(ind + 1)].remove_list()
+            listPredict = playerList[item][(ind + 1)].predict_for_disappeared_player(removeList)
+            playerList[item][(ind + 1)].save_predict_coords(listPredict)
             for nn in playerList[item][(ind + 1)].removePlayer:
                 removePlayer = playerList[item][(ind + 1)].removePlayer[nn]
 
-            valueTickWithPredictVal = paramsForDataTickWithPredictVal(listPredict, elems, predictObj, angleOrientation)
-            predictObj = createDataTickWithPredictVal(valueTickWithPredictVal, nowPlayer)
+            valueTickWithPredictVal = ParamsForDataTickWithPredictVal(listPredict, elems, predictObj, angleOrientation)
+            predictObj = create_data_tick_with_predict_val(valueTickWithPredictVal, nowPlayer)
 
             differenceX = np.abs(np.abs(averageX) - np.abs(absoluteX))
             differenceY = np.abs(np.abs(averageY) - np.abs(absoluteY))
@@ -155,7 +155,7 @@ for item in teams:
 # print("PREDICATED ACTIONS", predicated_actions)
 actions_count = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 correct_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
-incorrect_try_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
+not_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 incorrect_result_predicate = {"all": 0, "searching": 0, "passing": 0, "dribbling": 0, "fight": 0, "kickingg": 0}
 actions_count_by_nearest_players = {i: 0 for i in range(12)}
 correct_predicate_by_nearest_players = {i: 0 for i in range(12)}
@@ -192,8 +192,8 @@ for server_data in server_results:
                     flag = True
                     break
         if not flag and once_predicate:
-            incorrect_try_predicate["all"] += 1
-            incorrect_try_predicate[server_data.action.lower()] += 1
+            not_predicate["all"] += 1
+            not_predicate[server_data.action.lower()] += 1
             incorrect_result_predicate["all"] += 1
             actions_count_by_seen_enemies[predicated_actions.get(f"{server_data.time}{player}").seen_enemies_count] += 1
             if predicated_actions.keys().__contains__(keys[int(len(keys) / 2)]):
@@ -204,7 +204,7 @@ for server_data in server_results:
 
 print(actions_count)
 print(correct_predicate)
-print(incorrect_try_predicate)
+print(not_predicate)
 print(incorrect_result_predicate)
 print(actions_count_by_nearest_players)
 print(correct_predicate_by_nearest_players)
@@ -212,7 +212,7 @@ print(actions_count_by_seen_enemies)
 print(correct_predicate_by_seen_enemies)
 compare_log.write(f"all actions: {str(actions_count)}\n"
                   f"correct predicate: {str(correct_predicate)}\n"
-                  f"incorrect try predicate this: {str(incorrect_try_predicate)}\n"
+                  f"incorrect try predicate this: {str(not_predicate)}\n"
                   f"incorrect result predicate this: {str(incorrect_result_predicate)}\n"
                   f"actions by nearest players count: {str(actions_count_by_nearest_players)}\n"
                   f"correct predicate by nearest players count: {str(correct_predicate_by_nearest_players)}\n"

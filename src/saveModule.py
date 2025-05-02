@@ -1,22 +1,25 @@
 from collections import deque
 import numpy as np
 
-class posPlayer:
+
+class PosPlayer:
     def __init__(self, x, y, angle):
         self.x = x
         self.y = y
         self.angle = angle
+
     def __str__(self):
         return (
             f"x = {self.x}, y = {self.y}, angle = {self.angle}"
         )
 
-class otherPlayer:
+
+class OtherPlayer:
     def __init__(self):
         self.viewPlayer = []
         self.mapPlayer = {}
 
-    def addNewViewPlayer(self, playerName, posPlayer):
+    def add_new_view_player(self, playerName, posPlayer):
         self.viewPlayer.append(playerName)
         self.mapPlayer[playerName] = posPlayer
 
@@ -31,7 +34,7 @@ class otherPlayer:
         )
 
 
-class infoForTick:
+class InfoForTick:
     def __init__(self, x, y, absX, absY, angle, speedX, speedY, otherPlayers):
         self.x = x
         self.y = y
@@ -41,6 +44,7 @@ class infoForTick:
         self.speedX = speedX
         self.speedY = speedY
         self.Players = otherPlayers
+
     def __str__(self):
         return (
             f"x = {self.x}, y = {self.y} absX = {self.absX}, absY = {self.absY}, angle = {self.angle},"
@@ -48,12 +52,13 @@ class infoForTick:
             f"players: {self.Players}"
         )
 
-class storeAgent:
+
+class StoreAgent:
     def __init__(self):
         self.storeCoord = deque([], maxlen=5)
         self.removePlayer = {}
 
-    def addNewTickInfo(self, newInfo):
+    def add_new_tick_info(self, newInfo):
         if (len(self.storeCoord) < self.storeCoord.maxlen):
             self.storeCoord.append(newInfo)
         else:
@@ -69,24 +74,24 @@ class storeAgent:
             if len(self.removePlayer[elems]) > 10:
                 del self.removePlayer[elems]
 
-    def getLastItem(self):
-        return self.storeCoord[len(self.storeCoord)-1] if len(self.storeCoord) > 0 else None
+    def get_last_item(self):
+        return self.storeCoord[len(self.storeCoord) - 1] if len(self.storeCoord) > 0 else None
 
-    def getItemAt(self, index):
+    def get_item_at(self, index):
         if len(self.storeCoord) <= 0:
             return None
         if index >= len(self.storeCoord) and index < 0:
             return None
         return self.storeCoord[index]
 
-    def getLength(self):
+    def get_length(self):
         return len(self.storeCoord)
 
-    def removeList(self):
+    def remove_list(self):
         remove = []
         if (len(self.storeCoord) > 3):
-            current = self.storeCoord[len(self.storeCoord)-2].Players.viewPlayer
-            target = self.storeCoord[len(self.storeCoord)-1].Players.viewPlayer
+            current = self.storeCoord[len(self.storeCoord) - 2].Players.viewPlayer
+            target = self.storeCoord[len(self.storeCoord) - 1].Players.viewPlayer
             intersection = set(current) & set(target)
             for i in current:
                 if i not in intersection:
@@ -95,57 +100,57 @@ class storeAgent:
                 remove.append(key)
         return remove
 
-    def predictForDisappearedPlayer(self, disappearedArray):
-        predictCoordinate = []
+    def predict_for_disappeared_player(self, disappearedArray):
+        predict_coordinate = []
         for elem in disappearedArray:
-            metPos = []
-            sizeMorePredict = 1
+            met_pos = []
+            size_more_predict = 1
             for pos in self.storeCoord:
                 if elem in pos.Players.viewPlayer:
-                    metPos.append(pos.Players.mapPlayer[elem])
+                    met_pos.append(pos.Players.mapPlayer[elem])
             if elem in self.removePlayer:
-                metPos = np.concatenate((metPos, self.removePlayer[elem]))
+                met_pos = np.concatenate((met_pos, self.removePlayer[elem]))
                 if len(self.removePlayer[elem]) > 0:
-                    sizeMorePredict = len(self.removePlayer[elem]) + 1
-            # print('metPos len', len(metPos))
-            if len(metPos) > 1:
-                length = len(metPos)
-                angleFlag = int(metPos[length - 1].angle)
-                radian = (angleFlag if angleFlag > 0 else 360 + angleFlag) / (2 * np.pi)
-                #print('predict radian', radian)
+                    size_more_predict = len(self.removePlayer[elem]) + 1
+            # print('met_pos len', len(met_pos))
+            if len(met_pos) > 1:
+                length = len(met_pos)
+                angle_flag = int(met_pos[length - 1].angle)
+                radian = (angle_flag if angle_flag > 0 else 360 + angle_flag) / (2 * np.pi)
+                # print('predict radian', radian)
 
-                speedX = np.abs(metPos[length-1].x) - np.abs(metPos[length-2].x)
-                speedY = np.abs(metPos[length-1].y) - np.abs(metPos[length-2].y)
+                speed_x = np.abs(met_pos[length - 1].x) - np.abs(met_pos[length - 2].x)
+                speed_y = np.abs(met_pos[length - 1].y) - np.abs(met_pos[length - 2].y)
                 # # Третье состояние
-                # speedX = np.abs(metPos[length-1].x) - np.abs(metPos[length-2].x)
-                # speedY = np.abs(metPos[length-1].y) - np.abs(metPos[length-2].y)
-                # speedSecondX = np.abs(metPos[length - 2].x) - np.abs(metPos[length - 3].x)
-                # speedSecondY = np.abs(metPos[length - 2].y) - np.abs(metPos[length - 3].y)
-                # accelerationForX = speedX - speedSecondX
-                # accelerationForY = speedY - speedSecondY
+                # speed_x = np.abs(met_pos[length-1].x) - np.abs(met_pos[length-2].x)
+                # speed_y = np.abs(met_pos[length-1].y) - np.abs(met_pos[length-2].y)
+                # speedSecondX = np.abs(met_pos[length - 2].x) - np.abs(met_pos[length - 3].x)
+                # speedSecondY = np.abs(met_pos[length - 2].y) - np.abs(met_pos[length - 3].y)
+                # accelerationForX = speed_x - speedSecondX
+                # accelerationForY = speed_y - speedSecondY
                 # # Вычисление нового состояния с использованием ускорения
-                # predictX = metPos[length-1].x + speedSecondX * np.cos(radian) + accelerationForX/2 * np.cos(radian)
-                # predictY = metPos[length-1].y + speedSecondY * np.sin(radian) + accelerationForY/2 * np.sin(radian)
+                # predict_x = met_pos[length-1].x + speedSecondX * np.cos(radian) + accelerationForX/2 * np.cos(radian)
+                # predict_y = met_pos[length-1].y + speedSecondY * np.sin(radian) + accelerationForY/2 * np.sin(radian)
                 # # Вычисление усреднённой скорости
-                # predictX = metPos[length-1].x + (speedX+speedSecondX)/2 * np.cos(radian)
-                # predictY = metPos[length-1].y + (speedY+speedSecondY)/2 * np.sin(radian)
-                predictX = metPos[length-1].x + speedX * np.cos(radian)
-                predictY = metPos[length-1].y + speedY * np.sin(radian)
-                predictCoordinate.append({
+                # predict_x = met_pos[length-1].x + (speed_x+speedSecondX)/2 * np.cos(radian)
+                # predict_y = met_pos[length-1].y + (speed_y+speedSecondY)/2 * np.sin(radian)
+                predict_x = met_pos[length - 1].x + speed_x * np.cos(radian)
+                predict_y = met_pos[length - 1].y + speed_y * np.sin(radian)
+                predict_coordinate.append({
                     'name': elem,
-                    'x': predictX,
-                    'y': predictY,
-                    'beforeX': metPos[length-1].x,
-                    'beforeY': metPos[length-1].y,
-                    'angle': metPos[length - 1].angle,
-                    'predictTick': sizeMorePredict
+                    'x': predict_x,
+                    'y': predict_y,
+                    'beforeX': met_pos[length - 1].x,
+                    'beforeY': met_pos[length - 1].y,
+                    'angle': met_pos[length - 1].angle,
+                    'predictTick': size_more_predict
                 })
-        #print('predictCoordinate', predictCoordinate)
-        return predictCoordinate
+        # print('predict_coordinate', predict_coordinate)
+        return predict_coordinate
 
-    def savePredictCoords(self, predictCoordinate):
-        for pred in predictCoordinate:
-            self.removePlayer[pred['name']].append(posPlayer(pred['x'], pred['y'], pred['angle']))
+    def save_predict_coords(self, predict_coordinate):
+        for pred in predict_coordinate:
+            self.removePlayer[pred['name']].append(PosPlayer(pred['x'], pred['y'], pred['angle']))
 
     def __str__(self):
         # Форматирование storeCoord

@@ -1,6 +1,6 @@
 from actions import Actions
 from calculations import Calculations
-from processInputData import paramsForCalcPosition
+from processInputData import ParamsForCalcPosition
 from config import fuzzy_log
 
 
@@ -46,7 +46,7 @@ class FuzzyAnalysisSystem:
             }
         }
 
-    def __ball_knowledge_mf(self, tick_data: paramsForCalcPosition):
+    def __ball_knowledge_mf(self, tick_data: ParamsForCalcPosition):
         # Проверяем текущее наличие мяча в arrPlayer
         current_ball = 'b dist' in tick_data.arrPlayer.viewPlayer
 
@@ -56,22 +56,22 @@ class FuzzyAnalysisSystem:
         else:
             return {'known': 0.0, 'assumed': 0.0, 'unknown': 1.0}
 
-    def __pos_knowledge_mf(self, tick_data: paramsForCalcPosition):
+    def __pos_knowledge_mf(self, tick_data: ParamsForCalcPosition):
         current_pos = tick_data.absoluteX is not None and tick_data.absoluteY is not None
 
         if current_pos:
             return {'known': 1.0, 'assumed': 0.0, 'unknown': 0.0}
 
-        last_pos = tick_data.nowPlObj.getLastItem()
+        last_pos = tick_data.nowPlObj.get_last_item()
         if last_pos and last_pos.absoluteX is not None:
-            tact_count = tick_data.nowPlObj.getLength()
+            tact_count = tick_data.nowPlObj.get_length()
             if tact_count <= self.__assumed_know_value:
                 decay = 1.0 - (tact_count / self.__assumed_know_value)
                 return {'known': 0.0, 'assumed': decay, 'unknown': 1.0 - decay}
 
         return {'known': 0.0, 'assumed': 0.0, 'unknown': 1.0}
 
-    def __ball_distance_mf(self, tick_data: paramsForCalcPosition):
+    def __ball_distance_mf(self, tick_data: ParamsForCalcPosition):
         CLOSE_MAX = 3
         CLOSE_MIN = 7
         NEAR_MAX = 25
@@ -146,7 +146,7 @@ class FuzzyAnalysisSystem:
             "farther": Calculations.trapezoid_mf(closer_count, [FARTHER_MIN - 1, FARTHER_MIN, 11, 11])
         }
 
-    def __gate_possibility_mf(self, tick_data: paramsForCalcPosition):
+    def __gate_possibility_mf(self, tick_data: ParamsForCalcPosition):
         # Определение стороны из данных
         side = tick_data.side
 
@@ -194,7 +194,7 @@ class FuzzyAnalysisSystem:
             "block": 0.0
         }
 
-    def __ball_hold_mf(self, tick_data: paramsForCalcPosition):
+    def __ball_hold_mf(self, tick_data: ParamsForCalcPosition):
         # Находим мяч среди объектов
         ball = None
         for key in tick_data.arrPlayer.mapPlayer:
@@ -227,7 +227,7 @@ class FuzzyAnalysisSystem:
             "block": Calculations.trapezoid_mf(near_enemies_count, [2.0, 2.5, 11, 11])
         }
 
-    def __calculate_mf(self, tick_data: paramsForCalcPosition):
+    def __calculate_mf(self, tick_data: ParamsForCalcPosition):
         self.__variables["ball_knowledge"] = self.__ball_knowledge_mf(tick_data)
         self.__variables["pos_knowledge"] = self.__pos_knowledge_mf(tick_data)
         if self.__variables["ball_knowledge"]["known"] >= 0.7 and self.__variables["pos_knowledge"]["known"] >= 0.7:
@@ -285,7 +285,7 @@ class FuzzyAnalysisSystem:
         # Стандартное действие по умолчанию
         return Actions.SEARCHING.name.lower()
 
-    def execute(self, tick_data: paramsForCalcPosition):
+    def execute(self, tick_data: ParamsForCalcPosition):
         self.__reset_variables()
         self.seen_enemies_count = 0
         self.__calculate_mf(tick_data)

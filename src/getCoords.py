@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from config import teams, pathDefault, prefixFiles, numberTeamGoalie
 
-def Remove_Null_or_NAN_Columns(df):
+def remove_null_or_nan_columns(df):
     dff = pd.DataFrame()
     for cl in df.columns:
         notEmptyFlag = True
@@ -16,7 +16,7 @@ def Remove_Null_or_NAN_Columns(df):
             dff[cl] = df[cl]
     return dff
 
-def Find_All_Flags(series):
+def find_all_flags(series):
     resArr = []
     for index, value in series.items():
         if index != '# time' and index.find(' dist') != -1 and index.find('f ') != -1 and value != 'NAN':
@@ -29,7 +29,7 @@ def Find_All_Flags(series):
     return resArr
 
 
-def Find_All_Object(series):
+def find_all_object(series):
     resArr = []
     resBallArr = []
     for index, value in series.items():
@@ -49,7 +49,7 @@ def Find_All_Object(series):
             resBallArr[len(resArr) - 1]['angle'] = value
     return {'plArr': resArr, 'ballArr': resBallArr}
 
-def getAnswerForThreeFlags(flagOneCoord, flagTwoCoord, flagThreeCoord, distFOne, distFTwo, distFThree):
+def get_answer_for_three_flags(flagOneCoord, flagTwoCoord, flagThreeCoord, distFOne, distFTwo, distFThree):
     coords = []
     distance = []
     distance.append(float(distFOne))
@@ -61,17 +61,17 @@ def getAnswerForThreeFlags(flagOneCoord, flagTwoCoord, flagThreeCoord, distFOne,
 
     answer = None
     if (coords[0]['x'] == coords[1]['x']):
-      answer = coordsForSeemX(coords, distance, 0, 1, 2)
+      answer = coords_for_seem_x(coords, distance, 0, 1, 2)
     elif (coords[0]['x'] == coords[2]['x']):
-      answer = coordsForSeemX(coords, distance, 0, 2, 1)
+      answer = coords_for_seem_x(coords, distance, 0, 2, 1)
     elif (coords[1]['x'] == coords[2]['x']):
-      answer = coordsForSeemX(coords, distance, 1, 2, 0)
+      answer = coords_for_seem_x(coords, distance, 1, 2, 0)
     elif (coords[0]['y'] == coords[1]['y']):
-      answer = coordsForSeemY(coords, distance, 0, 1, 2)
+      answer = coords_for_seem_y(coords, distance, 0, 1, 2)
     elif (coords[0]['y'] == coords[2]['y']):
-      answer = coordsForSeemY(coords, distance, 0, 2, 1)
+      answer = coords_for_seem_y(coords, distance, 0, 2, 1)
     elif (coords[1]['y'] == coords[2]['y']):
-      answer = coordsForSeemY(coords, distance, 1, 2, 0)
+      answer = coords_for_seem_y(coords, distance, 1, 2, 0)
     else:
       alpha1 = (coords[0]['y'] - coords[1]['y']) / (coords[1]['x'] - coords[0]['x'])
       beta1 = (coords[1]['y']**2 - coords[0]['y']**2 + coords[1]['x']**2 - coords[0]['x']**2 + distance[0]**2 - distance[1]**2) / (2 * (coords[1]['x'] - coords[0]['x']))
@@ -83,7 +83,7 @@ def getAnswerForThreeFlags(flagOneCoord, flagTwoCoord, flagThreeCoord, distFOne,
         answer = { 'x': x, 'y': y }
     return answer
 
-def getAnswerForTwoFlags(flagOneCoord, flagTwoCoord, distFOne, distFTwo):
+def get_answer_for_two_flags(flagOneCoord, flagTwoCoord, distFOne, distFTwo):
     coords = []
     distance = []
     # p - флаги игрока
@@ -93,9 +93,9 @@ def getAnswerForTwoFlags(flagOneCoord, flagTwoCoord, distFOne, distFTwo):
     coords.append(flagTwoCoord)
     answer = None
     if (coords[0]['x'] == coords[1]['x']):
-        answer = coordsForSeemX(coords, distance, 0, 1, None)
+        answer = coords_for_seem_x(coords, distance, 0, 1, None)
     elif (coords[0]['y'] == coords[1]['y']):
-        answer = coordsForSeemY(coords, distance, 0, 1, None)
+        answer = coords_for_seem_y(coords, distance, 0, 1, None)
     else:
         alpha = (coords[0]['y'] - coords[1]['y']) / (coords[1]['x'] - coords[0]['x'])
         beta = (coords[1]['y']**2 - coords[0]['y']**2 + coords[1]['x']**2 - coords[0]['x']**2 + distance[0]**2 - distance[1]**2) / (2 * (coords[1]['x'] - coords[0]['x']))
@@ -107,10 +107,10 @@ def getAnswerForTwoFlags(flagOneCoord, flagTwoCoord, distFOne, distFTwo):
               coords[0]['x'] - np.sqrt(distance[0] ** 2 - (ys[0] - coords[0]['y']) ** 2),
               coords[0]['x'] + np.sqrt(distance[0] ** 2 - (ys[1] - coords[0]['y']) ** 2),
               coords[0]['x'] - np.sqrt(distance[0] ** 2 - (ys[1] - coords[0]['y']) ** 2)]
-        answer = checkAnswersForTwoFlags(xs, ys)
+        answer = check_answers_for_two_flags(xs, ys)
     return answer
 
-def coordsForSeemX(coords, distance, q0, q1, q2):
+def coords_for_seem_x(coords, distance, q0, q1, q2):
     y = (coords[q1]['y']**2 - coords[q0]['y']**2 + distance[q0]**2 - distance[q1]**2) / (2 * (coords[q1]['y'] - coords[q0]['y']))
     xs = []
     xs.append(coords[q0]['x'] + np.sqrt(np.abs(distance[q0]**2 - (y - coords[q0]['y'])**2)))
@@ -130,7 +130,7 @@ def coordsForSeemX(coords, distance, q0, q1, q2):
             answer = { 'x': xs[1], 'y': y }
     return answer
 
-def coordsForSeemY(coords, distance, q0, q1, q2):
+def coords_for_seem_y(coords, distance, q0, q1, q2):
     x = (coords[q1]['x']**2 - coords[q0]['x']**2 + distance[q0]**2 - distance[q1]**2) / (2 * (coords[q1]['x'] - coords[q0]['x']))
     ys = []
     ys.append(coords[q0]['y'] + np.sqrt(np.abs(distance[q0]**2 - (x - coords[q0]['x'])**2)))
@@ -151,7 +151,7 @@ def coordsForSeemY(coords, distance, q0, q1, q2):
     return answer
 
 
-def checkAnswersForTwoFlags(xs, ys):
+def check_answers_for_two_flags(xs, ys):
     answer = None
     for index in range(len(xs)):
         ind = 0 if (index < 2) else 1
@@ -170,7 +170,7 @@ class absoluteCoords:
 
 absolute_Coordinate = pd.read_csv(pathDefault+prefixFiles+'groundtruth.csv', sep=',')
 
-def getAbsolutedCoordinate(team, numPlayer, time, angleOrientation, isBall):
+def get_absoluted_coordinate(team, numPlayer, time, angleOrientation, isBall):
     timeRow = absolute_Coordinate[absolute_Coordinate['# time'] == time]
     nowPlayer = ''
     absoluteX = None

@@ -59,7 +59,7 @@ keys = list(all_actions.keys())
 x = range(len(keys))
 
 create_scatter_plot(x, [correct_predicate[k]/all_actions[k] if all_actions[k] else 0 for k in keys],
-                   keys, 'Процент коррктных предсказаний', 'Предсказания (Корректные/Все)', 'o')
+                   keys, 'Процент корректных предсказаний', 'Предсказания (Корректные/Все)', 'o')
 
 create_scatter_plot(x, [incorrect_try[k]/all_actions[k] if all_actions[k] else 0 for k in keys],
                    keys, 'Не предсказанные действия', 'Предсказания (Непредсказанные/Все)', 's')

@@ -1,38 +1,38 @@
 from config import Flags, numPeople
 from getCoords import *
-from saveModule import posPlayer, otherPlayer, storeAgent
+from saveModule import PosPlayer, OtherPlayer, StoreAgent
 import ast
 
 
-def readFile(resFlags, resMov):
+def read_file(res_flags, res_mov):
     for item in teams:
-        resFlags[item] = []
-        resMov[item] = []
+        res_flags[item] = []
+        res_mov[item] = []
         for index in range(numPeople):
             print(index, pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-landmarks.csv')
             iter = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-landmarks.csv', sep=',')
             print(index, pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv')
             iterMov = pd.read_csv(pathDefault + prefixFiles + item + '_' + str((index + 1)) + '-moving.csv', sep=',')
-            resFlags[item].append(Remove_Null_or_NAN_Columns(iter))
-            resMov[item].append(Remove_Null_or_NAN_Columns(iterMov))
-    return {'resFlags': resFlags, 'resMov': resMov}
+            res_flags[item].append(remove_null_or_nan_columns(iter))
+            res_mov[item].append(remove_null_or_nan_columns(iterMov))
+    return {'resFlags': res_flags, 'resMov': res_mov}
 
 
-def createMapViewFlag(resProcess, resFlagsTeam):
+def create_map_view_flag(res_process, res_flags_team):
     for item in teams:
-        resProcess[item] = {}
+        res_process[item] = {}
         for ind in range(numPeople):
-            resProcess[item][(ind + 1)] = []
-            for index, row in resFlagsTeam[item][ind].iterrows():
-                flags = Find_All_Flags(row)
-                resProcess[item][(ind + 1)].append({
+            res_process[item][(ind + 1)] = []
+            for index, row in res_flags_team[item][ind].iterrows():
+                flags = find_all_flags(row)
+                res_process[item][(ind + 1)].append({
                     'time': row['# time'],
                     'flags': flags
                 })
-    return resProcess
+    return res_process
 
 
-def createMapViewMove(resMoveP, resMoveB, resMovTeam):
+def create_map_view_move(resMoveP, resMoveB, resMovTeam):
     for item in teams:
         resMoveP[item] = {}
         resMoveB[item] = {}
@@ -40,14 +40,14 @@ def createMapViewMove(resMoveP, resMoveB, resMovTeam):
             resMoveP[item][(ind + 1)] = {}
             resMoveB[item][(ind + 1)] = {}
             for index, row in resMovTeam[item][ind].iterrows():
-                player = Find_All_Object(row)
+                player = find_all_object(row)
                 resMoveP[item][(ind + 1)][row['# time']] = player['plArr']
                 resMoveB[item][(ind + 1)][row['# time']] = player['ballArr']
     return {'resMoveP': resMoveP, 'resMoveB': resMoveB}
 
 
-class paramsForCalcPosition:
-    def __init__(self, elems, now_pl_obj: storeAgent, angle_orientation, value_lack_flag, variance_array, angle_flag,
+class ParamsForCalcPosition:
+    def __init__(self, elems, now_pl_obj: StoreAgent, angle_orientation, value_lack_flag, variance_array, angle_flag,
                  absolute_x, absolute_y):
         self.elems = elems
         self.nowPlObj = now_pl_obj
@@ -96,9 +96,9 @@ class paramsForCalcPosition:
       Конец объекта такта\n\n"""
 
 
-def calcPosOtherPl(param, resMovePTeam, team, ind):
+def calc_pos_other_player(param, resMovePTeam, team, ind):
     # calc other obj
-    arrPlayer = otherPlayer()
+    arrPlayer = OtherPlayer()
     for player in resMovePTeam[team][(ind + 1)][param.elems['time']]:
         coordsNewPlayer = []
         for indexFirstFlag in range(len(param.elems['flags'])):
@@ -125,10 +125,10 @@ def calcPosOtherPl(param, resMovePTeam, team, ind):
                     2 * float(player['dist']) * float(param.elems['flags'][indexSecondFlag]['dist']) * np.cos(
                         (np.abs(calcAngle) * np.pi / 180))
                 ))
-                calcCoords = getAnswerForThreeFlags({'x': param.averageX, 'y': param.averageY}, Flags[firstFlag],
-                                                    Flags[secondFlag], player['dist'],
-                                                    distanceBetweenFlagAndPlayerFirst,
-                                                    distanceBetweenFlagAndPlayerSecond)
+                calcCoords = get_answer_for_three_flags({'x': param.averageX, 'y': param.averageY}, Flags[firstFlag],
+                                                        Flags[secondFlag], player['dist'],
+                                                        distanceBetweenFlagAndPlayerFirst,
+                                                        distanceBetweenFlagAndPlayerSecond)
                 if (calcCoords):
                     calcX = calcCoords['x']
                     calcY = calcCoords['y']
@@ -156,23 +156,23 @@ def calcPosOtherPl(param, resMovePTeam, team, ind):
                 newPlayerY = -(sumY[1]) / sumY[3]
             if (np.abs(sumY[0]) > sumY[1] and sumY[2] != 0):
                 newPlayerY = np.abs(sumY[0]) / sumY[2]
-        positionP = posPlayer(newPlayerX, newPlayerY, player['angle'])
-        arrPlayer.addNewViewPlayer(player['column'], positionP)
+        positionP = PosPlayer(newPlayerX, newPlayerY, player['angle'])
+        arrPlayer.add_new_view_player(player['column'], positionP)
     return arrPlayer
 
 
-def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absoluteCoordArray):
+def calc_info_for_tick(param: ParamsForCalcPosition, resMovePTeam, team, ind, absoluteCoordArray):
     if (len(param.elems['flags']) < 2):
         if (param.valueLackFlag > 3):
             print('rotate for find flag!')
             return None
-        if (param.nowPlObj.getLength() < 2):
+        if (param.nowPlObj.get_length() < 2):
             print('rotate for find flag!')
             return None
         # addNewTickInfo
-        lenArCoord = param.nowPlObj.getLength()
-        firstCoordVal = param.nowPlObj.getItemAt(lenArCoord - 1)
-        secondCoordVal = param.nowPlObj.getItemAt(lenArCoord - 2)
+        lenArCoord = param.nowPlObj.get_length()
+        firstCoordVal = param.nowPlObj.get_item_at(lenArCoord - 1)
+        secondCoordVal = param.nowPlObj.get_item_at(lenArCoord - 2)
         if (firstCoordVal == None or secondCoordVal == None):
             print('rotate for find flag!')
             return None
@@ -196,9 +196,9 @@ def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absol
                 firstFlag = firstFlag[:len(firstFlag) - 4].replace(' ', '')
                 secondFlag = param.elems['flags'][indexSecondFlag]['column']
                 secondFlag = secondFlag[:len(secondFlag) - 4].replace(' ', '')
-                calcCoords = getAnswerForTwoFlags(Flags[firstFlag], Flags[secondFlag],
-                                                  param.elems['flags'][indexFirstFlag]['dist'],
-                                                  param.elems['flags'][indexSecondFlag]['dist'])
+                calcCoords = get_answer_for_two_flags(Flags[firstFlag], Flags[secondFlag],
+                                                      param.elems['flags'][indexFirstFlag]['dist'],
+                                                      param.elems['flags'][indexSecondFlag]['dist'])
                 if (calcCoords):
                     calcX = calcCoords['x']
                     calcY = calcCoords['y']
@@ -241,7 +241,7 @@ def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absol
                 kalman = (varianceLast) / (varianceLast + variance)
             param.varianceArray.append(variance)
             coordLastAbsolute = absoluteCoordArray[len(absoluteCoordArray) - 2]
-            coordLast = param.nowPlObj.getLastItem()
+            coordLast = param.nowPlObj.get_last_item()
             if (coordLast == None):
                 print('coordLast is None')
                 return None
@@ -263,12 +263,12 @@ def calcInfoForTick(param: paramsForCalcPosition, resMovePTeam, team, ind, absol
         if np.abs(param.averageY) > 32:
             return None
         # calc other obj
-        param.arrPlayer = calcPosOtherPl(param, resMovePTeam, team, ind)
+        param.arrPlayer = calc_pos_other_player(param, resMovePTeam, team, ind)
         param.team = team
         return param
 
 
-class paramsForDataTickWithPredictVal:
+class ParamsForDataTickWithPredictVal:
     def __init__(self, listPredict, elems, predictObj, angleOrientation):
         self.listPredict = listPredict
         self.elems = elems
@@ -276,7 +276,7 @@ class paramsForDataTickWithPredictVal:
         self.angleOrientation = angleOrientation
 
 
-def createDataTickWithPredictVal(param, nowPlayer):
+def create_data_tick_with_predict_val(param, nowPlayer):
     for predictVal in param.listPredict:
         name = predictVal['name'].replace(' dist', '')
         isBall = name == 'b'
@@ -284,20 +284,20 @@ def createDataTickWithPredictVal(param, nowPlayer):
         absCoordNow = None
         if isBall:
             if (param.elems['time'] < 6000):
-                absCoord = getAbsolutedCoordinate('', 0, param.elems['time'] + 1, param.angleOrientation, True)
+                absCoord = get_absoluted_coordinate('', 0, param.elems['time'] + 1, param.angleOrientation, True)
             else:
-                absCoord = getAbsolutedCoordinate('', 0, param.elems['time'], param.angleOrientation, True)
-            absCoordNow = getAbsolutedCoordinate('', 0, param.elems['time'], param.angleOrientation, True)
+                absCoord = get_absoluted_coordinate('', 0, param.elems['time'], param.angleOrientation, True)
+            absCoordNow = get_absoluted_coordinate('', 0, param.elems['time'], param.angleOrientation, True)
         else:
             team = name[(name.find('"') + 1):name.rfind('"')]
             teamNum = name[(name.rfind('"') + 2):len(name)]
             if (param.elems['time'] < 6000):
-                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'] + 1, param.angleOrientation,
-                                                  False)
+                absCoord = get_absoluted_coordinate(team, int(teamNum), param.elems['time'] + 1, param.angleOrientation,
+                                                    False)
             else:
-                absCoord = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'], param.angleOrientation,
-                                                  False)
-            absCoordNow = getAbsolutedCoordinate(team, int(teamNum), param.elems['time'], param.angleOrientation, False)
+                absCoord = get_absoluted_coordinate(team, int(teamNum), param.elems['time'], param.angleOrientation,
+                                                    False)
+            absCoordNow = get_absoluted_coordinate(team, int(teamNum), param.elems['time'], param.angleOrientation, False)
         if (absCoord != None and absCoordNow != None):
             addObj = {
                 'viewFrom': nowPlayer,
