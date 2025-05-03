@@ -227,7 +227,7 @@ compare_log.write(f"all actions: {str(actions_count)}\n"
                   f"actions by seen enemies: {str(actions_count_by_seen_enemies)}\n"
                   f"correct predicate by seen enemies: {str(correct_predicate_by_seen_enemies)}\n"
                   f"actions by seen teammates: {str(actions_count_by_seen_teammates)}\n"
-                  f"correct predicate by seen teammates:{str(correct_predicate_by_seen_teammates)}")
+                  f"correct predicate by seen teammates: {str(correct_predicate_by_seen_teammates)}")
 time_log.close()
 result_log.close()
 ans_log.close()

@@ -24,6 +24,8 @@ actions_nearest = data_dicts['actions by nearest players count']
 correct_nearest = data_dicts['correct predicate by nearest players count']
 action_seen_enemies = data_dicts['actions by seen enemies']
 correct_seen_enemies = data_dicts['correct predicate by seen enemies']
+action_seen_teammates = data_dicts['actions by seen teammates']
+correct_seen_teammates = data_dicts['correct predicate by seen teammates']
 
 all_actions.pop("fight", None)
 all_actions.pop("kickingg", None)
@@ -93,6 +95,22 @@ plt.plot(keys_seen, ratios, marker='o', markersize=8, linestyle='--',
 plt.xticks(keys_seen)
 plt.ylim(0, 1.1)
 plt.title('Процент предсказаний по количеству видимых игроков соперника')
+plt.xlabel('Количество видимых игроков')
+plt.ylabel('Предсказания (Правильные/Все)')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# График для seen teammates
+keys_seen = sorted(action_seen_teammates.keys())
+ratios = [correct_seen_teammates[k]/action_seen_teammates[k] if action_seen_teammates[k] else 0 for k in keys_seen]
+
+plt.figure()
+plt.plot(keys_seen, ratios, marker='o', markersize=8, linestyle='--',
+         markerfacecolor='none', markeredgecolor='black', color='black')
+plt.xticks(keys_seen)
+plt.ylim(0, 1.1)
+plt.title('Процент предсказаний по количеству видимых игроков союзников')
 plt.xlabel('Количество видимых игроков')
 plt.ylabel('Предсказания (Правильные/Все)')
 plt.grid(True)
