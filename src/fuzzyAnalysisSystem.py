@@ -11,6 +11,7 @@ class FuzzyAnalysisSystem:
         self.__assumed_know_value = 3
         self.__variables = self.__reset_variables()
         self.seen_enemies_count = 0
+        self.seen_teammates_count = 0
 
     def __reset_variables(self):
         return {
@@ -119,6 +120,7 @@ class FuzzyAnalysisSystem:
             if key.startswith(team_prefix):
                 teammates.append({"x": float(player.x), "y": float(player.y)})
 
+        self.seen_teammates_count = len(teammates)
         # Считаем количество игроков ближе к мячу
         closer_count = 0
         for teammate_pos in teammates:
@@ -288,10 +290,11 @@ class FuzzyAnalysisSystem:
     def execute(self, tick_data: ParamsForCalcPosition):
         self.__reset_variables()
         self.seen_enemies_count = 0
+        self.seen_teammates_count = 0
         self.__calculate_mf(tick_data)
         log = f"MATCH FUNCTIONS, {str(self.__variables)}, {tick_data.time}, {tick_data.team}, {tick_data.side}, " \
               f"{tick_data.number}\n "
         # print(log)
         fuzzy_log.write(log)
-        return self.__rules_handler(), self.seen_enemies_count
+        return self.__rules_handler(), self.seen_enemies_count, self.seen_teammates_count
         pass
