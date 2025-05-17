@@ -1,0 +1,10 @@
+all actions: {'all': 29913, 'searching': 28591, 'passing': 202, 'dribbling': 996, 'fight': 20, 'kickingg': 104}
+correct predicate: {'all': 24039, 'searching': 23410, 'passing': 7, 'dribbling': 622, 'fight': 0, 'kickingg': 0}
+incorrect try predicate this: {'all': 5874, 'searching': 5181, 'passing': 195, 'dribbling': 374, 'fight': 20, 'kickingg': 104}
+incorrect result predicate this: {'all': 5874, 'searching': 216, 'passing': 33, 'dribbling': 200, 'fight': 0, 'kickingg': 0}
+actions by nearest players count: {0: 28679, 1: 1189, 2: 45, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+correct predicate by nearest players count: {0: 23397, 1: 629, 2: 13, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+actions by seen enemies: {0: 12849, 1: 1968, 2: 3475, 3: 3948, 4: 2961, 5: 2196, 6: 1371, 7: 649, 8: 295, 9: 99, 10: 85, 11: 17}
+correct predicate by seen enemies: {0: 12491, 1: 1156, 2: 1799, 3: 2684, 4: 2245, 5: 1711, 6: 1074, 7: 503, 8: 223, 9: 73, 10: 69, 11: 11}
+actions by seen teammates: {0: 14573, 1: 2776, 2: 2763, 3: 2620, 4: 2618, 5: 2087, 6: 1463, 7: 702, 8: 202, 9: 50, 10: 59}
+correct predicate by seen teammates: {0: 12830, 1: 1588, 2: 1906, 3: 1648, 4: 2135, 5: 1764, 6: 1260, 7: 628, 8: 177, 9: 46, 10: 57}
