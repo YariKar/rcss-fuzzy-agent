@@ -1,10 +1,10 @@
-all actions: {'all': 29913, 'searching': 28591, 'passing': 202, 'dribbling': 996, 'fight': 20, 'kickingg': 104}
-correct predicate: {'all': 24039, 'searching': 23410, 'passing': 7, 'dribbling': 622, 'fight': 0, 'kickingg': 0}
-incorrect try predicate this: {'all': 5874, 'searching': 5181, 'passing': 195, 'dribbling': 374, 'fight': 20, 'kickingg': 104}
-incorrect result predicate this: {'all': 5874, 'searching': 216, 'passing': 33, 'dribbling': 200, 'fight': 0, 'kickingg': 0}
-actions by nearest players count: {0: 28679, 1: 1189, 2: 45, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-correct predicate by nearest players count: {0: 23397, 1: 629, 2: 13, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-actions by seen enemies: {0: 12849, 1: 1968, 2: 3475, 3: 3948, 4: 2961, 5: 2196, 6: 1371, 7: 649, 8: 295, 9: 99, 10: 85, 11: 17}
-correct predicate by seen enemies: {0: 12491, 1: 1156, 2: 1799, 3: 2684, 4: 2245, 5: 1711, 6: 1074, 7: 503, 8: 223, 9: 73, 10: 69, 11: 11}
-actions by seen teammates: {0: 14573, 1: 2776, 2: 2763, 3: 2620, 4: 2618, 5: 2087, 6: 1463, 7: 702, 8: 202, 9: 50, 10: 59}
-correct predicate by seen teammates: {0: 12830, 1: 1588, 2: 1906, 3: 1648, 4: 2135, 5: 1764, 6: 1260, 7: 628, 8: 177, 9: 46, 10: 57}
+all actions: {'all': 26962, 'searching': 25122, 'passing': 196, 'dribbling': 1230, 'fight': 105, 'kickingg': 309}
+correct predicate: {'all': 22470, 'searching': 22266, 'passing': 84, 'dribbling': 120, 'fight': 0, 'kickingg': 0}
+incorrect try predicate this: {'all': 4492, 'searching': 2856, 'passing': 112, 'dribbling': 1110, 'fight': 105, 'kickingg': 309}
+incorrect result predicate this: {'all': 4492, 'searching': 923, 'passing': 100, 'dribbling': 722, 'fight': 0, 'kickingg': 0}
+actions by nearest players count: {0: 25409, 1: 1397, 2: 150, 3: 6, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+correct predicate by nearest players count: {0: 22247, 1: 195, 2: 27, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+actions by seen enemies: {0: 12936, 1: 2849, 2: 3169, 3: 2818, 4: 2231, 5: 1604, 6: 835, 7: 383, 8: 112, 9: 23}
+correct predicate by seen enemies: {0: 12454, 1: 1913, 2: 2173, 3: 2014, 4: 1674, 5: 1194, 6: 650, 7: 300, 8: 77, 9: 20}
+actions by seen teammates: {0: 13120, 1: 2736, 2: 3531, 3: 2695, 4: 2333, 5: 1427, 6: 770, 7: 288, 8: 55, 9: 7}
+correct predicate by seen teammates: {0: 12427, 1: 1721, 2: 2542, 3: 1854, 4: 1804, 5: 1163, 6: 651, 7: 251, 8: 50, 9: 7}

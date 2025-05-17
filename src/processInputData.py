@@ -342,7 +342,7 @@ def parse_groundtruth_file():
 
     # Загрузка CSV-файла с обработкой списков
     df = pd.read_csv(
-        r'E:\My_Programs\study\degree_bak\rcss-fuzzy-agent\example_csv\Gliders2016-HELIOS2017-action-groundtruth-v3.csv',
+        r'E:\My_Programs\study\degree_bak\rcss-fuzzy-agent\example_csv\HfutEngine2017-HELIOS2017-action-groundtruth-v3.csv',
         converters={
             'nearestPlayer': parse_list,
             'middleDistPlayer': parse_list,
